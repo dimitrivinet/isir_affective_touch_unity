@@ -4,9 +4,32 @@ using UnityEngine;
 
 using StackExchange.Redis;
 
+public class RedisChannels
+{
+    public static string robot_qd = "encoder_speeds";
+    public static string robot_q = "encoder_positions";
+    public static string robot_q_non_rt = "__encoder_positions";
+    public static string stroke_speed = "caresse";
+    public static string stimulus_done = "stimulus_done";
+    public static string user_gave_input = "user_gave_input";
+    public static string current_trial = "current_trial";
+    public static string sleeping = "sleeping";
+}
+
 public class RedisManager : MonoBehaviour
 {
     public string redisConnectionString = "localhost:6379";
+    public Dictionary<string, string> Channels = new(){
+        {"robot_qd", "encoder_speeds"},
+        {"robot_q", "encoder_positions"},
+        {"robot_q_non_rt", "__encoder_positions"},
+        {"stroke_speed", "caresse"},
+        {"stimulus_done", "stimulus_done"},
+        {"user_gave_input", "user_gave_input"},
+        {"current_trial", "current_trial"},
+        {"sleeping", "sleeping"},
+    };
+
     private ConnectionMultiplexer connection;
     private bool connected;
    
@@ -34,6 +57,26 @@ public class RedisManager : MonoBehaviour
         }
     }
 
+    public void Set(string key, string value)
+    {
+        if (connected)
+        {
+            IDatabase db = connection.GetDatabase();
+            db.StringSet(key, value);
+        }
+    }
+
+    public string Get(string key)
+    {
+        if (connected)
+        {
+            IDatabase db = connection.GetDatabase();
+            return db.StringGet(key).ToString();
+        }
+
+        return null;
+    }
+
     // Start is called before the first frame update
     void Start()
     {
@@ -50,10 +93,5 @@ public class RedisManager : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
-        if (!connected)
-        {
-            TryRedisConnect();
-            return;
-        }
     }
 }
