@@ -14,6 +14,9 @@ public class RedisChannels
     public static string user_gave_input = "user_gave_input";
     public static string current_trial = "current_trial";
     public static string sleeping = "sleeping";
+    public static string input_curr_selected = "input_curr_selected";
+    public static string pleasantness = "pleasantness";
+    public static string intensity = "intensity";
 }
 
 public class RedisManager : MonoBehaviour
@@ -32,10 +35,10 @@ public class RedisManager : MonoBehaviour
 
     private ConnectionMultiplexer connection;
     private bool connected;
-   
+
     void TryRedisConnect()
     {
-        try 
+        try
         {
             connection = ConnectionMultiplexer.Connect(redisConnectionString);
             connected = true;
