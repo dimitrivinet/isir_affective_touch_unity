@@ -10,6 +10,15 @@ public class ButtonActions : MonoBehaviour
 {
     public TextMeshProUGUI CsvPath;
     public TextMeshProUGUI RedisConnString;
+    public ObjectPinning VisualTrajectory;
+
+    public void Update()
+    {
+        if (Input.GetKeyDown(KeyCode.F))
+        {
+            ToggleVisualTrajectory();
+        }
+    }
 
     public void GoToExperiment()
     {
@@ -81,5 +90,10 @@ public class ButtonActions : MonoBehaviour
     public void SaveRedisConnString()
     {
         MainManager.Instance.RedisConnString = RedisConnString.text;
+    }
+
+    public void ToggleVisualTrajectory()
+    {
+        VisualTrajectory.freeze = !VisualTrajectory.freeze;
     }
 }

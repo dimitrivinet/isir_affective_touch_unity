@@ -25,13 +25,21 @@ public class InputSystemManager : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
+        return;
         string CurrentSelectedString = RedisManager.Get(RedisChannels.input_curr_selected);
         if (CurrentSelectedString == null)
         {
             return;
         }
 
-        CurrentSelected = int.Parse(CurrentSelectedString);
+        try
+        {
+            CurrentSelected = int.Parse(CurrentSelectedString);
+        }
+        catch
+        {
+            return;
+        }
 
         PleasantnessText.color = Color.black;
         IntensityText.color = Color.black;

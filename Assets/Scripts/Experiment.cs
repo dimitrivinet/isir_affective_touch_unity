@@ -3,6 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
+using Unity.VisualScripting;
 using UnityEngine;
 
 public class Experiment : MonoBehaviour
@@ -11,6 +12,7 @@ public class Experiment : MonoBehaviour
     public double TravelDistanceCm = 9.0;
     public double SecondsBetweenStimTypes = 90;
     public RedisManager Redis;
+    public Vibrators VibratorsManager;
     private readonly float[] ValidSpeeds = { 0.5F, 1, 3, 10, 30 };
 
     public void StartExperiment()
@@ -26,7 +28,7 @@ public class Experiment : MonoBehaviour
             }
         }
 
-        // connect vibrators
+        VibratorsManager.ConnectSTM();
         Redis.Set(RedisChannels.user_gave_input, "false");
 
         int i = 0;
@@ -93,17 +95,17 @@ public class Experiment : MonoBehaviour
                     speed_cms_str = speed_cms_int.ToString();
                 }
 
-                // vibrators.set_active(stm_udp, active=True)
-                // vibrators.set_vibrate(stm_udp, speed_cms_str, c.WAV_VOLUME)
-                // vibrators.load_wav(stm_udp)
-                // vibrators.trig_wav(stm_udp)
+                VibratorsManager.SetActive(true);
+                VibratorsManager.SetVibrate(speed_cms_str, 0.5);
+                VibratorsManager.LoadWav();
+                VibratorsManager.TrigWav();
 
                 Debug.Log("start stim, speed: " + speed_cms_str);
                 Thread.Sleep((int)(stimulation_time * 1000));
                 Debug.Log("end stim");
 
-                // vibrators.stop_vibrating(stm_udp)
-                // vibrators.set_active(stm_udp, active=False)
+                VibratorsManager.StopVibrating();
+                VibratorsManager.SetActive(false);
 
                 // stimulus done, prepare for next stimulus
                 Redis.Set(RedisChannels.stimulus_done, "true");
@@ -120,7 +122,6 @@ public class Experiment : MonoBehaviour
                 }                                        
                 Thread.Sleep(100);
             }
-            // r.set(c.REDIS_USER_GAVE_INPUT_KEY, "false")
             Redis.Set(RedisChannels.user_gave_input, "false");
             Redis.Set(RedisChannels.sleeping, "3");
             Redis.Set($"{RedisChannels.sleeping}:time", DateTime.UtcNow.ToString("o"));

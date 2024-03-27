@@ -20,6 +20,5 @@ public class Route : MonoBehaviour
 
         Gizmos.DrawLine(controlPoints[0].position, controlPoints[1].position);
         Gizmos.DrawLine(controlPoints[2].position, controlPoints[3].position);
-
     }
 }

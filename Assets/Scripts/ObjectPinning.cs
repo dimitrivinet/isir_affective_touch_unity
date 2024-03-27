@@ -4,9 +4,10 @@ using UnityEngine;
 
 public class ObjectPinning : MonoBehaviour
 {
-    public GameObject firstChild;
-    public GameObject secondChild;
+    public GameObject Target;
+    public GameObject Anchor;
     public Vector3 offsetValue;
+    public bool freeze = false;
     // Start is called before the first frame update
     void Start()
     {
@@ -16,6 +17,7 @@ public class ObjectPinning : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
-        firstChild.transform.position = secondChild.transform.position + offsetValue;
+        if (!freeze)
+            Target.transform.position = Anchor.transform.position + offsetValue;
     }
 }

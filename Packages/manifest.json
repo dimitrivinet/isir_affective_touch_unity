@@ -8,6 +8,7 @@
     "com.meta.xr.sdk.interaction.ovr.samples": "62.0.0",
     "com.unity.collab-proxy": "2.2.0",
     "com.unity.demoteam.hair": "https://github.com/Unity-Technologies/com.unity.demoteam.hair.git",
+    "com.unity.demoteam.mesh-to-sdf": "https://github.com/Unity-Technologies/com.unity.demoteam.mesh-to-sdf.git",
     "com.unity.feature.development": "1.0.1",
     "com.unity.formats.alembic": "2.3.4",
     "com.unity.render-pipelines.universal": "14.0.10",
