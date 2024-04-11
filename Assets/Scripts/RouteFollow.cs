@@ -11,11 +11,9 @@ public class RouteFollow : MonoBehaviour
     public float ApproachSpeed = 1F;
     public float StrokeSpeed = 1F;
     public Transform StrokeRoute;
-    public Quaternion RotOffset;
+    public Transform Orientation;
     public Vector3 PosOffset;
     public bool LookAtTraj = true;
-    [Header("Loop movement for debug purposes")]
-    public bool debugTraj = false;
     private int routeToGo;
 
     private float tParam;
@@ -24,6 +22,9 @@ public class RouteFollow : MonoBehaviour
     public double[] RouteLengths;
     public bool GoByTheRouteOnceRunning = false;
     public Material BrushMaterial;
+    
+    [Header("Loop movement for debug purposes")]
+    public bool debugTraj = false;
 
 
     private bool coroutineAllowed;
@@ -79,7 +80,7 @@ public class RouteFollow : MonoBehaviour
         return ret * 100;
     }
 
-    public IEnumerator GoByTheRouteOnce(string speed_cms)
+    public IEnumerator GoByTheRouteOnce(string speed_cms, float stroke_length_cm)
     {
         GoByTheRouteOnceRunning = true;
         bool oldDebugTraj = debugTraj;
@@ -95,11 +96,20 @@ public class RouteFollow : MonoBehaviour
 
         Vector3 p0 = routes[0].GetChild(0).position;
 
-        for (int i = 0; i < routes.Length; i++)
-        {
-            yield return GoByTheRoute(i);
-        }
+        // for (int i = 0; i < routes.Length; i++)
+        // {
+        //     yield return GoByTheRoute(i);
+        // }
 
+        yield return GoByTheRoute(0);
+        BrushMaterial.color = Color.green;
+        yield return GoForward(speed_cms_f, stroke_length_cm);
+        BrushMaterial.color = new Color32(0x01, 0x3A, 0x65, 0xFF);
+        Vector3 oldRoute2Position = routes[2].position;
+        routes[2].position = transform.position - PosOffset;
+        yield return GoByTheRoute(2);
+
+        routes[2].position = oldRoute2Position;
         ApproachSpeed = oldApproachSpeed;
         StrokeSpeed = oldStrokeSpeed;
 
@@ -114,6 +124,20 @@ public class RouteFollow : MonoBehaviour
         GoByTheRouteOnceRunning = false;
     }
 
+    private IEnumerator GoForward(float strokeSpeedCms, float strokeLengthCm)
+    {
+        float lengthStroked = 0;
+        Vector3 toStroke;
+        while (lengthStroked < strokeLengthCm)
+        {
+            toStroke = strokeSpeedCms / 100f * Time.deltaTime * Vector3.forward;
+            // toStroke = strokeSpeedCms / 100f * Time.deltaTime * transform.forward;
+            transform.Translate(toStroke);
+            lengthStroked += toStroke.magnitude * 100f;
+            yield return new WaitForEndOfFrame();
+        }
+    }
+
     private IEnumerator GoByTheRoute(int routeNum)
     {
         coroutineAllowed = false;
@@ -123,7 +147,7 @@ public class RouteFollow : MonoBehaviour
         Vector3 p1 = routes[routeNum].GetChild(1).position;
         Vector3 p2 = routes[routeNum].GetChild(2).position;
         Vector3 p3 = routes[routeNum].GetChild(3).position;
-        transform.rotation = RotOffset;
+        transform.rotation = Orientation.rotation;
 
         float speed = routes[routeNum] == StrokeRoute ? StrokeSpeed : ApproachSpeed;
         // float speedModifier = speed / 9F;
@@ -136,7 +160,7 @@ public class RouteFollow : MonoBehaviour
         }
         else
         {
-            BrushMaterial.color = new Color(0x01, 0x3A, 0x65);
+            BrushMaterial.color = new Color32(0x01, 0x3A, 0x65, 0xFF);
         }
 
         while (tParam < 1)
@@ -149,7 +173,7 @@ public class RouteFollow : MonoBehaviour
             if (LookAtTraj)
             {
                 transform.LookAt(objectPosition);
-                transform.rotation *= RotOffset;
+                // transform.rotation *= RotOffset;
             }
 
             transform.position = objectPosition;

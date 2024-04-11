@@ -1,7 +1,6 @@
 using System;
 using System.Collections;
 using System.Threading;
-using Meta.WitAi.Utilities;
 using TMPro;
 using UnityEngine;
 using UnityEngine.Events;
@@ -17,6 +16,12 @@ public class ManualStimulus : MonoBehaviour
     public Vibrators VibratorsManager;
     public RouteFollow VisualManager;
     public float RobotDelayOffset;
+    public float VibratorDelayOffset;
+    public TMP_InputField ManualText;
+    public bool UseManualText = false;
+    public float StrokeLengthCm = 9f;
+    private bool RobotMoving = false;
+    private bool IsRobotMovingRunning = false;
 
     // Start is called before the first frame update
     void Start()
@@ -53,25 +58,39 @@ public class ManualStimulus : MonoBehaviour
         callable(arg);
     }
 
+    IEnumerator IsRobotMoving()
+    {
+        IsRobotMovingRunning = true;
+        RobotMoving = Redis.Get("robot_moving") == "true";
+        IsRobotMovingRunning = false;
+        yield return null;
+    }
+
     UnityAction GetTaskOnClick(string type, string arg, int id)
     {
         void TaskOnClickWithArg()
         {
             if (VisualManager.GoByTheRouteOnceRunning)
                 return;
+                
+            if (UseManualText)
+            {
+                RobotDelayOffset = float.Parse(ManualText.text.Trim());
+            }
 
-            float speed_cms;
+            float visualSpeed;
             try
             {
-                speed_cms = float.Parse(arg);
+                visualSpeed = float.Parse(arg);
             }
             catch
             {
+                Debug.Log("cant parse arg");
                 return;
             }
 
             string tactileArg;
-            if (speed_cms < 3)
+            if (visualSpeed < 3)
             {
                 tactileArg = "1";
             }
@@ -79,8 +98,17 @@ public class ManualStimulus : MonoBehaviour
             {
                 tactileArg = "10";
             }
+            float tactileSpeed = float.Parse(tactileArg);
+            // tactileArg = arg;  // temporary override
 
             Debug.Log(string.Format("Button clicked: {0}:{1}", type, arg));
+
+            float visualApproachTime = (float)VisualManager.RouteLengths[0] / visualSpeed;
+            float congurentVisualApproachTime = (float)VisualManager.RouteLengths[0] / tactileSpeed;
+            float trueApproachTime = congurentVisualApproachTime - (congurentVisualApproachTime - visualApproachTime);
+            
+
+            StrokeLengthCm = visualSpeed / tactileSpeed * 9f;
 
             Func<string, IEnumerator> TactileStroke;
             float delay;
@@ -88,27 +116,45 @@ public class ManualStimulus : MonoBehaviour
             {
                 TactileStroke = RobotStroke;
                 
-                float visualApproachTime = (float)VisualManager.RouteLengths[0] / speed_cms - 0.1f;
-                float tactileApproachTime = 12.8f / float.Parse(tactileArg);
-                delay = visualApproachTime - tactileApproachTime - RobotDelayOffset;
+                float tactileApproachTime = 12.8f / tactileSpeed;  // 12.8 = approach distance in cm
+                delay = trueApproachTime - tactileApproachTime - RobotDelayOffset;
+                // delay = visualApproachTime - tactileApproachTime - RobotDelays[id];
             }
             else if (type == "vibreurs")
             {
                 TactileStroke = VibratorStroke;
-                delay = (float)VisualManager.RouteLengths[0] / speed_cms - 0.1f;
+                delay = trueApproachTime - VibratorDelayOffset;
+                // delay = (float)VisualManager.RouteLengths[0] / speed_cms - VibratorDelays[id];
             }
             else
             {
                 return;
             }
+            Debug.Log("delai total: " + delay);
 
             if (delay < 0)  // TactileStroke should run before VisualStroke
             {
-                // execute VisualStroke after abs(delay) seconds
-                IEnumerator coroutine = WaitAndRun(Math.Abs(delay), VisualStroke, arg);
-                StartCoroutine(coroutine);
+                // // execute VisualStroke after abs(delay) seconds
+                // IEnumerator coroutine = WaitAndRun(Math.Abs(delay), VisualStroke, arg);
+                // StartCoroutine(coroutine);
 
                 StartCoroutine(TactileStroke(tactileArg));
+                
+                StartCoroutine(IsRobotMoving());
+                int timeout = 10_000;  // 10 seconds
+                while (!RobotMoving && timeout > 0)
+                {
+                    if (!IsRobotMovingRunning)
+                    {
+                        StartCoroutine(IsRobotMoving());
+                    }
+                    Thread.Sleep(1);
+                    timeout++;
+                }
+                // Thread.Sleep((int)(Math.Abs(delay) * 1000));
+                // VisualStroke(arg);
+                IEnumerator coroutine = WaitAndRun(Math.Abs(delay), VisualStroke, arg);
+                StartCoroutine(coroutine);
             }
             else  // TactileStroke should run after VisualStroke
             {
@@ -162,7 +208,7 @@ public class ManualStimulus : MonoBehaviour
 
     private void VisualStroke(string speed_cms)
     {
-        StartCoroutine(VisualManager.GoByTheRouteOnce(speed_cms));
+        StartCoroutine(VisualManager.GoByTheRouteOnce(speed_cms, StrokeLengthCm));
     }
 
 

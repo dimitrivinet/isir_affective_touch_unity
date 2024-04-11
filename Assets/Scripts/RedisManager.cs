@@ -34,7 +34,7 @@ public class RedisManager : MonoBehaviour
     };
 
     private ConnectionMultiplexer connection;
-    private bool connected;
+    public bool connected;
 
     void TryRedisConnect()
     {
