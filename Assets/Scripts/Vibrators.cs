@@ -9,7 +9,7 @@ public class Vibrators : MonoBehaviour
 {
     public string UdpHost;
     public int UdpPort;
-    public int[] VibIds = new int[]{0, 1, 2 ,3};
+    public int[] VibIds;
     private UdpClient Udp;
 
     public void ConnectSTM()
@@ -57,7 +57,7 @@ public class Vibrators : MonoBehaviour
             Udp.Send(setName, setName.Length);
 
             byte[] setVolume = Encoding.UTF8.GetBytes($"wavChangedVolume;{vibId};{volume}");
-            Udp.Send(setName, setName.Length);
+            Udp.Send(setVolume, setVolume.Length);
         }
     }
 

@@ -22,6 +22,7 @@ public class ManualStimulus : MonoBehaviour
     public float StrokeLengthCm = 9f;
     private bool RobotMoving = false;
     private bool IsRobotMovingRunning = false;
+    public bool TurnGreen;
 
     // Start is called before the first frame update
     void Start()
@@ -38,6 +39,11 @@ public class ManualStimulus : MonoBehaviour
             TextMeshProUGUI text = btn.GetComponentInChildren<TextMeshProUGUI>();
             btn.onClick.AddListener(GetTaskOnClick("vibreurs", text.text, i));
         }
+    }
+
+    void Update()
+    {
+        VisualManager.TurnGreen = TurnGreen;
     }
 
     private IEnumerator WaitAndRun(float seconds, Action<string> callable, string arg)
@@ -75,7 +81,14 @@ public class ManualStimulus : MonoBehaviour
                 
             if (UseManualText)
             {
-                RobotDelayOffset = float.Parse(ManualText.text.Trim());
+                // RobotDelayOffset = float.Parse(ManualText.text.Trim());
+                // VibratorDelayOffset = float.Parse(ManualText.text.Trim());
+                arg = ManualText.text.Trim();
+            }
+            else
+            {
+                RobotDelayOffset = RobotDelays[id];
+                VibratorDelayOffset = VibratorDelays[id];
             }
 
             float visualSpeed;
@@ -90,7 +103,8 @@ public class ManualStimulus : MonoBehaviour
             }
 
             string tactileArg;
-            if (visualSpeed < 3)
+            // if (visualSpeed < 3)
+            if (id <= 4)
             {
                 tactileArg = "1";
             }
@@ -141,15 +155,15 @@ public class ManualStimulus : MonoBehaviour
                 StartCoroutine(TactileStroke(tactileArg));
                 
                 StartCoroutine(IsRobotMoving());
-                int timeout = 10_000;  // 10 seconds
+                int timeout = 3_000;  // 3 seconds
                 while (!RobotMoving && timeout > 0)
                 {
                     if (!IsRobotMovingRunning)
                     {
                         StartCoroutine(IsRobotMoving());
                     }
-                    Thread.Sleep(1);
-                    timeout++;
+                    Thread.Sleep(1000 / 60);
+                    timeout -= 1000 / 60;
                 }
                 // Thread.Sleep((int)(Math.Abs(delay) * 1000));
                 // VisualStroke(arg);

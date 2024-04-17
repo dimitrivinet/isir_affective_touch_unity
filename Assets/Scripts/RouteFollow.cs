@@ -1,19 +1,47 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using Meta.WitAi;
 using Unity.VisualScripting;
 using UnityEngine;
+
+
+public class RouteAnimTrigger
+{
+    public Animator animator;
+    public float triggerTParam;
+    public string triggerName;
+    public bool triggered;
+
+    public RouteAnimTrigger(Animator animator, float triggerTParam, string triggerName)
+    {
+        this.animator = animator;
+        this.triggerTParam = triggerTParam;
+        this.triggerName = triggerName;
+        this.triggered = false;
+    }
+
+    public IEnumerator TriggerAfterSeconds(float seconds)
+    {
+        yield return new WaitForSeconds(seconds);
+        animator.SetTrigger(triggerName);
+    }
+}
+
 
 public class RouteFollow : MonoBehaviour
 {
 
     public Transform[] routes;
+    public Animator animator;
     public float ApproachSpeed = 1F;
     public float StrokeSpeed = 1F;
     public Transform StrokeRoute;
     public Transform Orientation;
     public Vector3 PosOffset;
+    public Vector3 AdjustedPosOffset;
     public bool LookAtTraj = true;
+    public bool TurnGreen;
     private int routeToGo;
 
     private float tParam;
@@ -25,6 +53,10 @@ public class RouteFollow : MonoBehaviour
     
     [Header("Loop movement for debug purposes")]
     public bool debugTraj = false;
+    [Header("0: début, 0.5: centre, 1: fin")]
+
+    [Range(0.0f, 1.0f)]
+    public float TrajPosCoeff = 0.5f;
 
 
     private bool coroutineAllowed;
@@ -42,6 +74,8 @@ public class RouteFollow : MonoBehaviour
             RouteLengths[i] = GetRouteLengthCm(routes[i]);
             Debug.Log(string.Format("Route {0} length: {1}", i, RouteLengths[i]));
         }
+
+        transform.gameObject.SetActive(false);
     }
 
     // Update is called once per frame
@@ -49,7 +83,7 @@ public class RouteFollow : MonoBehaviour
     {
         if (coroutineAllowed && debugTraj)
         {
-            StartCoroutine(GoByTheRoute(routeToGo));
+            StartCoroutine(GoByTheRoute(routeToGo, null));
         }
     }
 
@@ -90,24 +124,50 @@ public class RouteFollow : MonoBehaviour
         float speed_cms_f = float.Parse(speed_cms);
         float oldApproachSpeed = ApproachSpeed;
         float oldStrokeSpeed = StrokeSpeed;
+        float baseAnimationTime = 0.14f;
 
         ApproachSpeed = speed_cms_f;
         StrokeSpeed = speed_cms_f;
 
         Vector3 p0 = routes[0].GetChild(0).position;
+        AdjustedPosOffset = PosOffset - (stroke_length_cm - 9f) * TrajPosCoeff * transform.forward / 100;
+        transform.position = p0 + AdjustedPosOffset;
+        transform.gameObject.SetActive(true);
+        yield return new WaitForSeconds(2);
 
         // for (int i = 0; i < routes.Length; i++)
         // {
         //     yield return GoByTheRoute(i);
         // }
 
-        yield return GoByTheRoute(0);
-        BrushMaterial.color = Color.green;
+        float animationSpeed = speed_cms_f / 10.0f;
+        Debug.Log("animationSpeed=" + animationSpeed);
+        animator.SetFloat("Speed", animationSpeed);
+        float animationTime = baseAnimationTime / animationSpeed;
+
+        float approachTime = (float)RouteLengths[0] / StrokeSpeed;
+        RouteAnimTrigger rat0 = new(animator, 0f, "Flex");
+        float animStartDelay = approachTime - animationTime * 3.0f;
+        // Debug.Log(approachTime + " : " + animationTime + " : " + animStartDelay);
+        StartCoroutine(rat0.TriggerAfterSeconds(animStartDelay));
+
+        yield return GoByTheRoute(0, null);
+        if (TurnGreen)
+        {
+            BrushMaterial.color = Color.green;
+        }
+        
+        float forwardTime = stroke_length_cm / speed_cms_f;
+        RouteAnimTrigger rat1 = new(animator, 0f, "Unflex");
+        StartCoroutine(rat1.TriggerAfterSeconds(forwardTime - animationTime / 2.0f));
         yield return GoForward(speed_cms_f, stroke_length_cm);
-        BrushMaterial.color = new Color32(0x01, 0x3A, 0x65, 0xFF);
+        if (TurnGreen)
+        {
+            BrushMaterial.color = new Color32(0x01, 0x3A, 0x65, 0xFF);
+        }
         Vector3 oldRoute2Position = routes[2].position;
-        routes[2].position = transform.position - PosOffset;
-        yield return GoByTheRoute(2);
+        routes[2].position = transform.position - AdjustedPosOffset;
+        yield return GoByTheRoute(2,  new RouteAnimTrigger(animator, 0.3f, "Unflex"));
 
         routes[2].position = oldRoute2Position;
         ApproachSpeed = oldApproachSpeed;
@@ -117,9 +177,9 @@ public class RouteFollow : MonoBehaviour
         debugTraj = oldDebugTraj;
 
         transform.gameObject.SetActive(false);
-        transform.position = p0 + PosOffset;
-        yield return new WaitForSeconds(1);
-        transform.gameObject.SetActive(true);
+        // transform.position = p0 + PosOffset;
+        // yield return new WaitForSeconds(1);
+        // transform.gameObject.SetActive(true);
         yield return new WaitForEndOfFrame();
         GoByTheRouteOnceRunning = false;
     }
@@ -138,7 +198,7 @@ public class RouteFollow : MonoBehaviour
         }
     }
 
-    private IEnumerator GoByTheRoute(int routeNum)
+    private IEnumerator GoByTheRoute(int routeNum, RouteAnimTrigger routeAnimTrigger)
     {
         coroutineAllowed = false;
         // analyser la vitesse du stimulus visuel et déterminer la speed scale pour chaque vitesse
@@ -153,22 +213,21 @@ public class RouteFollow : MonoBehaviour
         // float speedModifier = speed / 9F;
         float speedModifier = speed / (float)RouteLengths[routeNum];
 
-        if (routes[routeNum] == StrokeRoute)
-        {
-            // oldcolor = 013A65
-            BrushMaterial.color = Color.green;
-        }
-        else
-        {
-            BrushMaterial.color = new Color32(0x01, 0x3A, 0x65, 0xFF);
-        }
-
         while (tParam < 1)
         {
+            if (routeAnimTrigger != null)
+            {
+                if (tParam >= routeAnimTrigger.triggerTParam && !routeAnimTrigger.triggered)
+                {
+                    routeAnimTrigger.animator.SetTrigger(routeAnimTrigger.triggerName);
+                    routeAnimTrigger.triggered = true;
+                }
+            }
+
             tParam += Time.deltaTime * speedModifier;
 
             objectPosition = Mathf.Pow(1 - tParam, 3) * p0 + 3 * Mathf.Pow(1 - tParam, 2) * tParam * p1 + 3 * (1 - tParam) * Mathf.Pow(tParam, 2) * p2 + Mathf.Pow(tParam, 3) * p3;
-            objectPosition += PosOffset;
+            objectPosition += AdjustedPosOffset;
 
             if (LookAtTraj)
             {
