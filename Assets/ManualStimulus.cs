@@ -46,10 +46,10 @@ public class ManualStimulus : MonoBehaviour
         VisualManager.TurnGreen = TurnGreen;
     }
 
-    private IEnumerator WaitAndRun(float seconds, Action<string> callable, string arg)
+    private IEnumerator WaitAndRun(float seconds, Action<string, StrokeType> callable, string arg, StrokeType strokeType)
     {
         yield return new WaitForSeconds(seconds);
-        callable(arg);
+        callable(arg, strokeType);
     }
 
     private IEnumerator WaitAndRun(float seconds, IEnumerator coroutine)
@@ -126,8 +126,10 @@ public class ManualStimulus : MonoBehaviour
 
             Func<string, IEnumerator> TactileStroke;
             float delay;
+            StrokeType strokeType;
             if (type == "robot")
             {
+                strokeType = StrokeType.Robot;
                 TactileStroke = RobotStroke;
                 
                 float tactileApproachTime = 12.8f / tactileSpeed;  // 12.8 = approach distance in cm
@@ -136,6 +138,7 @@ public class ManualStimulus : MonoBehaviour
             }
             else if (type == "vibreurs")
             {
+                strokeType = StrokeType.Vibrator;
                 TactileStroke = VibratorStroke;
                 delay = trueApproachTime - VibratorDelayOffset;
                 // delay = (float)VisualManager.RouteLengths[0] / speed_cms - VibratorDelays[id];
@@ -167,7 +170,7 @@ public class ManualStimulus : MonoBehaviour
                 }
                 // Thread.Sleep((int)(Math.Abs(delay) * 1000));
                 // VisualStroke(arg);
-                IEnumerator coroutine = WaitAndRun(Math.Abs(delay), VisualStroke, arg);
+                IEnumerator coroutine = WaitAndRun(Math.Abs(delay), VisualStroke, arg, strokeType);
                 StartCoroutine(coroutine);
             }
             else  // TactileStroke should run after VisualStroke
@@ -176,7 +179,7 @@ public class ManualStimulus : MonoBehaviour
                 IEnumerator coroutine = WaitAndRun(delay, TactileStroke(tactileArg));
                 StartCoroutine(coroutine);
 
-                VisualStroke(arg);
+                VisualStroke(arg, strokeType);
             }
         }
         return TaskOnClickWithArg;
@@ -220,9 +223,9 @@ public class ManualStimulus : MonoBehaviour
         Redis.Set(RedisChannels.stimulus_done, "true");
     }
 
-    private void VisualStroke(string speed_cms)
+    private void VisualStroke(string speed_cms, StrokeType strokeType)
     {
-        StartCoroutine(VisualManager.GoByTheRouteOnce(speed_cms, StrokeLengthCm));
+        StartCoroutine(VisualManager.GoByTheRouteOnce(speed_cms, StrokeLengthCm, strokeType));
     }
 
 

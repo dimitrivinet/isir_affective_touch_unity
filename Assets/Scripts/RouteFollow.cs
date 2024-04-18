@@ -6,6 +6,13 @@ using Unity.VisualScripting;
 using UnityEngine;
 
 
+public enum StrokeType
+{
+    Vibrator,
+    Robot
+}
+
+
 public class RouteAnimTrigger
 {
     public Animator animator;
@@ -31,7 +38,7 @@ public class RouteAnimTrigger
 
 public class RouteFollow : MonoBehaviour
 {
-
+    public float test;
     public Transform[] routes;
     public Animator animator;
     public float ApproachSpeed = 1F;
@@ -39,7 +46,7 @@ public class RouteFollow : MonoBehaviour
     public Transform StrokeRoute;
     public Transform Orientation;
     public Vector3 PosOffset;
-    public Vector3 AdjustedPosOffset;
+    private Vector3 AdjustedPosOffset;
     public bool LookAtTraj = true;
     public bool TurnGreen;
     private int routeToGo;
@@ -114,7 +121,7 @@ public class RouteFollow : MonoBehaviour
         return ret * 100;
     }
 
-    public IEnumerator GoByTheRouteOnce(string speed_cms, float stroke_length_cm)
+    public IEnumerator GoByTheRouteOnce(string speed_cms, float stroke_length_cm, StrokeType strokeType)
     {
         GoByTheRouteOnceRunning = true;
         bool oldDebugTraj = debugTraj;
@@ -133,7 +140,6 @@ public class RouteFollow : MonoBehaviour
         AdjustedPosOffset = PosOffset - (stroke_length_cm - 9f) * TrajPosCoeff * transform.forward / 100;
         transform.position = p0 + AdjustedPosOffset;
         transform.gameObject.SetActive(true);
-        yield return new WaitForSeconds(2);
 
         // for (int i = 0; i < routes.Length; i++)
         // {
@@ -144,10 +150,24 @@ public class RouteFollow : MonoBehaviour
         Debug.Log("animationSpeed=" + animationSpeed);
         animator.SetFloat("Speed", animationSpeed);
         float animationTime = baseAnimationTime / animationSpeed;
+        
+        yield return new WaitForSeconds(2);
 
         float approachTime = (float)RouteLengths[0] / StrokeSpeed;
         RouteAnimTrigger rat0 = new(animator, 0f, "Flex");
-        float animStartDelay = approachTime - animationTime * 3.0f;
+        float animStartDelay = 0f;
+        if (strokeType == StrokeType.Vibrator)
+        {
+            animStartDelay = approachTime - animationTime * 3.0f;
+        }
+        else if (strokeType == StrokeType.Robot)
+        {
+            animStartDelay = approachTime - animationTime * 9.0f;
+        }
+        else
+        {
+            yield return null;
+        }
         // Debug.Log(approachTime + " : " + animationTime + " : " + animStartDelay);
         StartCoroutine(rat0.TriggerAfterSeconds(animStartDelay));
 

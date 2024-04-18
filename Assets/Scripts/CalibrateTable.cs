@@ -4,21 +4,15 @@ using UnityEngine;
 
 public class CalibrateTable : MonoBehaviour
 {
-    public GameObject[] ToCalibrate;
-    public GameObject handRight;
+    public Transform staticAvatarWrist;
+    public Transform movingAvatarWrist;
+    public GameObject target;
     public Vector3 offset;
 
     public void calibrateTable()
     {
-        Vector3 disp = handRight.transform.position + offset;
-
-        foreach (var toCal in ToCalibrate)
-        {
-            Vector3 newPos = toCal.transform.position;
-            newPos.z = disp.z;
-            newPos.y = disp.y;
-            toCal.transform.position = newPos;
-        }
+        Vector3 diff = staticAvatarWrist.position - movingAvatarWrist.position;
+        target.transform.position += diff;
     }
 
     // Start is called before the first frame update
