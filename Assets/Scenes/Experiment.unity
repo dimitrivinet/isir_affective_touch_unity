@@ -9964,6 +9964,19 @@ Rigidbody:
   m_Interpolate: 0
   m_Constraints: 0
   m_CollisionDetection: 0
+--- !u!114 &821398331
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 821398320}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 274835e4e2feae04b87f0d000555f8a4, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  _providedSkeletonType: 0
 --- !u!1 &824768808
 GameObject:
   m_ObjectHideFlags: 8
@@ -15239,15 +15252,15 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: e90520f3b2e75c34b84d96e20091eb25, type: 3}
       propertyPath: m_LocalRotation.x
-      value: 0
+      value: -0
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: e90520f3b2e75c34b84d96e20091eb25, type: 3}
       propertyPath: m_LocalRotation.y
-      value: 0
+      value: -0
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: e90520f3b2e75c34b84d96e20091eb25, type: 3}
       propertyPath: m_LocalRotation.z
-      value: 0
+      value: -0
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: e90520f3b2e75c34b84d96e20091eb25, type: 3}
       propertyPath: m_LocalEulerAnglesHint.x
@@ -15567,7 +15580,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 919132149155446097, guid: e90520f3b2e75c34b84d96e20091eb25, type: 3}
       propertyPath: m_IsActive
-      value: 0
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 1059160885601992643, guid: e90520f3b2e75c34b84d96e20091eb25, type: 3}
       propertyPath: m_Layer
@@ -15851,7 +15864,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 8914649145424431402, guid: e90520f3b2e75c34b84d96e20091eb25, type: 3}
       propertyPath: m_IsActive
-      value: 0
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 8941147551458798881, guid: e90520f3b2e75c34b84d96e20091eb25, type: 3}
       propertyPath: m_Layer
@@ -15903,6 +15916,9 @@ PrefabInstance:
     - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: e90520f3b2e75c34b84d96e20091eb25, type: 3}
       insertIndex: -1
       addedObject: {fileID: 821398330}
+    - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: e90520f3b2e75c34b84d96e20091eb25, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 821398331}
     - targetCorrespondingSourceObject: {fileID: -9112162899851204172, guid: e90520f3b2e75c34b84d96e20091eb25, type: 3}
       insertIndex: -1
       addedObject: {fileID: 64872895}
@@ -19010,6 +19026,7 @@ MonoBehaviour:
   movingAvatarWrist: {fileID: 839477088}
   target: {fileID: 687060943}
   offset: {x: 0, y: 0, z: 0}
+  skeleton: {fileID: 1677570724}
 --- !u!1001 &1827383048
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -19417,10 +19434,6 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 114392993255165844, guid: 835e735ca71bf78459fb2cababd74112, type: 3}
       propertyPath: _renderPhysicsCapsules
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 114567484643301796, guid: 835e735ca71bf78459fb2cababd74112, type: 3}
-      propertyPath: _enablePhysicsCapsules
       value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 137619227449585070, guid: 835e735ca71bf78459fb2cababd74112, type: 3}
@@ -22614,9 +22627,9 @@ SceneRoots:
   - {fileID: 227692575}
   - {fileID: 549021553}
   - {fileID: 1667922142}
+  - {fileID: 1452981970}
   - {fileID: 687060944}
   - {fileID: 1603369096}
-  - {fileID: 1452981970}
   - {fileID: 1975522456}
   - {fileID: 951870397}
   - {fileID: 1189967704}

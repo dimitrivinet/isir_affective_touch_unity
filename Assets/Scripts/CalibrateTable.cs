@@ -5,13 +5,18 @@ using UnityEngine;
 public class CalibrateTable : MonoBehaviour
 {
     public Transform staticAvatarWrist;
-    public Transform movingAvatarWrist;
+    public OVRSkeleton skeleton;
     public GameObject target;
     public Vector3 offset;
 
     public void calibrateTable()
     {
-        Vector3 diff = staticAvatarWrist.position - movingAvatarWrist.position;
+        if (skeleton.Bones.Count == 0)
+        {
+            return;
+        }
+
+        Vector3 diff = staticAvatarWrist.position - skeleton.Bones[0].Transform.position;
         target.transform.position += diff;
     }
 
