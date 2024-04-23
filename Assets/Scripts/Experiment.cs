@@ -2,6 +2,7 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
+using System.Linq.Expressions;
 using System.Threading;
 using Unity.VisualScripting;
 using UnityEngine;
@@ -9,36 +10,72 @@ using UnityEngine;
 public class Experiment : MonoBehaviour
 {
     public bool Stop = false;
-    public double TravelDistanceCm = 9.0;
-    public double SecondsBetweenStimTypes = 90;
+    public float SecondsBetweenStimTypes = 90;
+    public float SecondsBetweenStims = 20;
+    public ManualStimulus StimulusManager;
     public RedisManager Redis;
     public Vibrators VibratorsManager;
+    [SerializeField]
+    public Trial[] Trials;
     private readonly float[] ValidSpeeds = { 0.5F, 1, 3, 10, 30 };
+    private IEnumerator RoutineEnumerator;
+    private Coroutine Routine;
 
-    public void StartExperiment()
+    public void SpawnStartExperiment()
     {
-        var trials = MainManager.Instance.trials;
+        RoutineEnumerator = StartExperiment();
+        Routine = StartCoroutine(RoutineEnumerator);
+    }
 
+    public void KillStartExperiment()
+    {
+        Stop = false;
+        StopCoroutine(Routine);
+    }
+
+    private IEnumerator StartExperiment()
+    {
+        List<Trial> trials;
+        Debug.Log("Get trials list");
+        if (MainManager.Instance != null)
+        {
+            trials = MainManager.Instance.trials;
+        }
+        else
+        {
+            trials = new List<Trial>(Trials);
+        }
+
+        if (!trials.Any())
+        {
+            yield break;
+        }
+
+        Debug.Log("Check if trials are ok");
         foreach (var trial in trials)
         {
-            if (!ValidSpeeds.Contains(trial.Speed))
+            if (!ValidSpeeds.Contains(trial.TactileSpeed))
             {
-                Debug.LogError($"Invalid speed {trial.Speed}");
-                return;
+                Debug.LogError($"Invalid speed {trial.TactileSpeed}");
+                yield break;
             }
         }
 
+        Debug.Log("Connect STM");
         VibratorsManager.ConnectSTM();
+        Debug.Log("Setup Redis variables");
         Redis.Set(RedisChannels.user_gave_input, "false");
 
         int i = 0;
+        Debug.Log("Set initial trial type");
         var last_trial_type = trials[0].Stimulus;
 
+        Debug.Log("Main loop");
         while (i < trials.Count())
         {
             if (Stop)
             {
-                return;
+                yield break;
             }
 
             var trial = trials[i];
@@ -51,86 +88,83 @@ public class Experiment : MonoBehaviour
                 Debug.Log("Changing trial type");
                 Redis.Set(RedisChannels.sleeping, SecondsBetweenStimTypes.ToString());
                 Redis.Set($"{RedisChannels.sleeping}:time", DateTime.UtcNow.ToString("o"));
-                Thread.Sleep((int)(SecondsBetweenStimTypes * 1000));
+                yield return new WaitForSeconds(SecondsBetweenStimTypes);
                 Redis.Set(RedisChannels.sleeping, "false");
                 last_trial_type = trial.Stimulus;
             }
 
             if (Stop)
             {
-                return;
+                yield break;
             }
 
             Redis.Set(RedisChannels.stimulus_done, "false");
 
-            var speed_cms = trial.Speed;
-
+            StrokeType strokeType = StrokeType.None;
             if (trial.Stimulus == "2")  // robot
             {
-                Redis.Publish(RedisChannels.stroke_speed, speed_cms.ToString());
-
-                // wait for robot control to set stimulus done to true
-                while (!(Redis.Get(RedisChannels.stimulus_done) == "true"))
-                {
-                    if (Stop)
-                    {
-                        return;
-                    }
-
-                    Thread.Sleep(100);
-                }
+                strokeType = StrokeType.Robot;
             }
             else if (trial.Stimulus == "1")  // vibrators
             {
-                double time_margin_s = 0.5;
-                double stimulation_time = TravelDistanceCm / speed_cms + time_margin_s;
-                string speed_cms_str;
-                if (speed_cms < 1)
-                {
-                    speed_cms_str = speed_cms.ToString();
-                }
-                else
-                {
-                    var speed_cms_int = (int)speed_cms;
-                    speed_cms_str = speed_cms_int.ToString();
-                }
-
-                VibratorsManager.SetActive(true);
-                VibratorsManager.SetVibrate(speed_cms_str, 0.5);
-                VibratorsManager.LoadWav();
-                VibratorsManager.TrigWav();
-
-                Debug.Log("start stim, speed: " + speed_cms_str);
-                Thread.Sleep((int)(stimulation_time * 1000));
-                Debug.Log("end stim");
-
-                VibratorsManager.StopVibrating();
-                VibratorsManager.SetActive(false);
-
-                // stimulus done, prepare for next stimulus
-                Redis.Set(RedisChannels.stimulus_done, "true");
+                strokeType = StrokeType.Vibrator;
             }
 
-            bool cont = false;
-            while(!cont)
+            Debug.Log($"stimulate once with parameters: tactileSpeed={trial.TactileSpeed}, visualSpeed={trial.VisualSpeed}, strokeType={strokeType}, delay={0.0f}");
+            yield return StimulusManager.StimulateOnce(trial.TactileSpeed, trial.VisualSpeed, strokeType, 0.0f);
+
+            // wait for stimulus done to be true
+            Debug.Log("waiting for stimulus to be done");
+            bool cont = Redis.Get(RedisChannels.stimulus_done) == "true";
+            cont = true;  // skip waiting for answer
+            while (!cont)
+            {
+                if (Stop)
+                {
+                    yield break;
+                }
+
+                yield return new WaitForSeconds(0.1f);
+                cont = Redis.Get(RedisChannels.stimulus_done) == "true";
+            }
+
+            cont = Redis.Get(RedisChannels.user_gave_input) == "true";
+            cont = true;  // skip waiting for answer
+            float toSleepS = SecondsBetweenStims - 3.0f;
+            float checkIntervalS = 0.1f;
+            Debug.Log("waiting for user answer");
+            while (!cont)
             {
                 cont = Redis.Get(RedisChannels.user_gave_input) == "true";
                 if (Redis.Get(RedisChannels.user_gave_input) == "redo")
                 {
+                    Debug.Log("redo");
                     i--;
                     cont = true;
-                }                                        
-                Thread.Sleep(100);
+                }
+                yield return new WaitForSeconds(checkIntervalS / 1000.0f);
+                toSleepS -= checkIntervalS;
             }
+
+            Debug.Log($"sleeping between stim for {toSleepS + 3.0f} seconds");
+            if (toSleepS > 0)
+            {
+                Redis.Set(RedisChannels.sleeping, toSleepS.ToString());
+                Redis.Set($"{RedisChannels.sleeping}:time", DateTime.UtcNow.ToString("o"));
+                yield return new WaitForSeconds(toSleepS);
+            }
+
             Redis.Set(RedisChannels.user_gave_input, "false");
             Redis.Set(RedisChannels.sleeping, "3");
             Redis.Set($"{RedisChannels.sleeping}:time", DateTime.UtcNow.ToString("o"));
-            Thread.Sleep(3000);
+            yield return new WaitForSeconds(3.0f);
             Redis.Set(RedisChannels.sleeping, "false");
 
             Debug.Log("next stimulus");
 
             i += 1;
         }
+        Debug.Log("All trials done");
+        yield break;
     }
 }

@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 
 using StackExchange.Redis;
+using UnityEngine.Rendering;
 
 public class RedisChannels
 {
@@ -38,6 +39,11 @@ public class RedisManager : MonoBehaviour
 
     void TryRedisConnect()
     {
+        if (MainManager.Instance != null)
+        {
+            redisConnectionString = MainManager.Instance.RedisConnString;
+        }
+        
         try
         {
             connection = ConnectionMultiplexer.Connect(redisConnectionString);

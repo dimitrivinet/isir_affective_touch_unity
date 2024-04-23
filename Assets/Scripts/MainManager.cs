@@ -3,15 +3,18 @@ using System.Collections.Generic;
 using UnityEditor.Rendering;
 using UnityEngine;
 
+[System.Serializable]
 public class Trial
 {
     public string Stimulus;
-    public float Speed;
+    public float VisualSpeed;
+    public float TactileSpeed;
 
-    public Trial(string stimulus, float speed)
+    public Trial(string stimulus, float visualSpeed, float tactileSpeed)
     {
         this.Stimulus = stimulus;
-        this.Speed = speed;
+        this.VisualSpeed = visualSpeed;
+        this.TactileSpeed = tactileSpeed;
     }
 }
 
@@ -45,25 +48,15 @@ public class MainManager : MonoBehaviour
             {
                 var split = trial_str.Split(";");
                 string stimulus = split[0];
-                float speed = float.Parse(split[1]);
+                float visualSpeed = float.Parse(split[1]);
+                float tactileSpeed = float.Parse(split[2]);
 
-                trials.Add(new Trial(stimulus, speed));
+                trials.Add(new Trial(stimulus, visualSpeed, tactileSpeed));
             }
             catch
             {
                 continue;
             }
-        }
-    }
-
-    public void RunTrials()
-    {
-        foreach (Trial trial in trials)
-        {
-            if (trial.Stimulus == "1")  // vibrators
-            {}
-            else if (trial.Stimulus == "2")  // robot
-            {}
         }
     }
 }

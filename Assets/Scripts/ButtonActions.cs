@@ -11,6 +11,7 @@ public class ButtonActions : MonoBehaviour
     public TextMeshProUGUI CsvPath;
     public TextMeshProUGUI RedisConnString;
     public ObjectPinning VisualTrajectory;
+    public Experiment ExperimentManager;
 
     public void Update()
     {
@@ -18,6 +19,15 @@ public class ButtonActions : MonoBehaviour
         {
             ToggleVisualTrajectory();
         }
+        if (Input.GetKeyDown(KeyCode.R))
+        {
+            RunExperiment();
+        }
+    }
+
+    public void RunExperiment()
+    {
+        ExperimentManager.SpawnStartExperiment();
     }
 
     public void GoToExperiment()
