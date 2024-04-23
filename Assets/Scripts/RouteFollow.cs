@@ -8,6 +8,7 @@ using UnityEngine;
 
 public enum StrokeType
 {
+    None,
     Vibrator,
     Robot
 }
@@ -121,20 +122,19 @@ public class RouteFollow : MonoBehaviour
         return ret * 100;
     }
 
-    public IEnumerator GoByTheRouteOnce(string speed_cms, float stroke_length_cm, StrokeType strokeType)
+    public IEnumerator GoByTheRouteOnce(float speed_cms, float stroke_length_cm, StrokeType strokeType)
     {
         GoByTheRouteOnceRunning = true;
         bool oldDebugTraj = debugTraj;
         debugTraj = false;
         tParam = 0f;
 
-        float speed_cms_f = float.Parse(speed_cms);
         float oldApproachSpeed = ApproachSpeed;
         float oldStrokeSpeed = StrokeSpeed;
         float baseAnimationTime = 0.14f;
 
-        ApproachSpeed = speed_cms_f;
-        StrokeSpeed = speed_cms_f;
+        ApproachSpeed = speed_cms;
+        StrokeSpeed = speed_cms;
 
         Vector3 p0 = routes[0].GetChild(0).position;
         AdjustedPosOffset = PosOffset - (stroke_length_cm - 9f) * TrajPosCoeff * transform.forward / 100;
@@ -146,7 +146,7 @@ public class RouteFollow : MonoBehaviour
         //     yield return GoByTheRoute(i);
         // }
 
-        float animationSpeed = speed_cms_f / 10.0f;
+        float animationSpeed = speed_cms / 10.0f;
         Debug.Log("animationSpeed=" + animationSpeed);
         animator.SetFloat("Speed", animationSpeed);
         float animationTime = baseAnimationTime / animationSpeed;
@@ -166,7 +166,7 @@ public class RouteFollow : MonoBehaviour
         }
         else
         {
-            yield return null;
+            yield break;
         }
         // Debug.Log(approachTime + " : " + animationTime + " : " + animStartDelay);
         StartCoroutine(rat0.TriggerAfterSeconds(animStartDelay));
@@ -177,10 +177,10 @@ public class RouteFollow : MonoBehaviour
             BrushMaterial.color = Color.green;
         }
         
-        float forwardTime = stroke_length_cm / speed_cms_f;
+        float forwardTime = stroke_length_cm / speed_cms;
         RouteAnimTrigger rat1 = new(animator, 0f, "Unflex");
         StartCoroutine(rat1.TriggerAfterSeconds(forwardTime - animationTime / 2.0f));
-        yield return GoForward(speed_cms_f, stroke_length_cm);
+        yield return GoForward(speed_cms, stroke_length_cm);
         if (TurnGreen)
         {
             BrushMaterial.color = new Color32(0x01, 0x3A, 0x65, 0xFF);

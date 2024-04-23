@@ -46,10 +46,10 @@ public class ManualStimulus : MonoBehaviour
         VisualManager.TurnGreen = TurnGreen;
     }
 
-    private IEnumerator WaitAndRun(float seconds, Action<string, StrokeType> callable, string arg, StrokeType strokeType)
+    private IEnumerator WaitAndRun(float seconds, Action<float, StrokeType> callable, float speed_cms, StrokeType strokeType)
     {
         yield return new WaitForSeconds(seconds);
-        callable(arg, strokeType);
+        callable(speed_cms, strokeType);
     }
 
     private IEnumerator WaitAndRun(float seconds, IEnumerator coroutine)
@@ -69,131 +69,125 @@ public class ManualStimulus : MonoBehaviour
         IsRobotMovingRunning = true;
         RobotMoving = Redis.Get("robot_moving") == "true";
         IsRobotMovingRunning = false;
-        yield return null;
+        yield break;
+    }
+
+    public IEnumerator StimulateOnce(float tactileSpeed, float visualSpeed, StrokeType strokeType, float delayOffset)
+    {
+        if (VisualManager.GoByTheRouteOnceRunning)
+            yield break;
+
+        float visualApproachTime = (float)VisualManager.RouteLengths[0] / visualSpeed;
+        float congurentVisualApproachTime = (float)VisualManager.RouteLengths[0] / tactileSpeed;
+        float trueApproachTime = congurentVisualApproachTime - (congurentVisualApproachTime - visualApproachTime);
+        
+        StrokeLengthCm = visualSpeed / tactileSpeed * 9f;
+
+        Func<float, IEnumerator> TactileStroke;
+        float delay = 0.0f;
+        if (strokeType == StrokeType.Robot)
+        {
+            TactileStroke = RobotStroke;
+            
+            float tactileApproachTime = 12.8f / tactileSpeed;  // 12.8 = approach distance in cm
+            delay = trueApproachTime - tactileApproachTime - RobotDelayOffset;
+            // delay = visualApproachTime - tactileApproachTime - RobotDelays[id];
+        }
+        else if (strokeType == StrokeType.Vibrator)
+        {
+            TactileStroke = VibratorStroke;
+            delay = trueApproachTime - VibratorDelayOffset;
+            // delay = (float)VisualManager.RouteLengths[0] / speed_cms - VibratorDelays[id];
+        }
+        else
+        {
+            yield break;
+        }
+        Debug.Log("delai total: " + delay);
+
+        if (delay < 0)  // TactileStroke should run before VisualStroke
+        {
+            // // execute VisualStroke after abs(delay) seconds
+            // IEnumerator coroutine = WaitAndRun(Math.Abs(delay), VisualStroke, arg);
+            // StartCoroutine(coroutine);
+
+            StartCoroutine(TactileStroke(tactileSpeed));
+            
+            StartCoroutine(IsRobotMoving());
+            int timeout = 3_000;  // 3 seconds
+            while (!RobotMoving && timeout > 0)
+            {
+                if (!IsRobotMovingRunning)
+                {
+                    StartCoroutine(IsRobotMoving());
+                }
+                Thread.Sleep(1000 / 60);
+                timeout -= 1000 / 60;
+            }
+            // Thread.Sleep((int)(Math.Abs(delay) * 1000));
+            // VisualStroke(arg);
+            IEnumerator coroutine = WaitAndRun(Math.Abs(delay), VisualStroke, visualSpeed, strokeType);
+            StartCoroutine(coroutine);
+        }
+        else  // TactileStroke should run after VisualStroke
+        {
+            // execute TactileStroke after delay seconds
+            IEnumerator coroutine = WaitAndRun(delay, TactileStroke(tactileSpeed));
+            StartCoroutine(coroutine);
+
+            VisualStroke(visualSpeed, strokeType);
+        }
     }
 
     UnityAction GetTaskOnClick(string type, string arg, int id)
     {
+        Debug.Log(string.Format("Button clicked: {0}:{1}", type, arg));
+
+        StrokeType strokeType;
+        float delayOffset = 0.0f;
+        if (type == "robot")
+        {
+            strokeType = StrokeType.Robot;
+            delayOffset = RobotDelays[id];
+
+        }
+        else if (type == "vibreurs")
+        {
+            strokeType = StrokeType.Vibrator;
+            delayOffset = VibratorDelays[id];
+        }
+        else
+        {
+            return () => {};  // in case the type was incorrect, return a function that returns nothing
+        }
+
+        float tactileSpeed;
+        if (id <= 4)
+        {
+            tactileSpeed = 1.0f;
+        }
+        else
+        {
+            tactileSpeed = 10.0f;
+        }
+        float visualSpeed = float.Parse(arg);
+
         void TaskOnClickWithArg()
         {
-            if (VisualManager.GoByTheRouteOnceRunning)
-                return;
-                
-            if (UseManualText)
-            {
-                // RobotDelayOffset = float.Parse(ManualText.text.Trim());
-                // VibratorDelayOffset = float.Parse(ManualText.text.Trim());
-                arg = ManualText.text.Trim();
-            }
-            else
-            {
-                RobotDelayOffset = RobotDelays[id];
-                VibratorDelayOffset = VibratorDelays[id];
-            }
-
-            float visualSpeed;
-            try
-            {
-                visualSpeed = float.Parse(arg);
-            }
-            catch
-            {
-                Debug.Log("cant parse arg");
-                return;
-            }
-
-            string tactileArg;
-            // if (visualSpeed < 3)
-            if (id <= 4)
-            {
-                tactileArg = "1";
-            }
-            else
-            {
-                tactileArg = "10";
-            }
-            float tactileSpeed = float.Parse(tactileArg);
-            // tactileArg = arg;  // temporary override
-
-            Debug.Log(string.Format("Button clicked: {0}:{1}", type, arg));
-
-            float visualApproachTime = (float)VisualManager.RouteLengths[0] / visualSpeed;
-            float congurentVisualApproachTime = (float)VisualManager.RouteLengths[0] / tactileSpeed;
-            float trueApproachTime = congurentVisualApproachTime - (congurentVisualApproachTime - visualApproachTime);
-            
-
-            StrokeLengthCm = visualSpeed / tactileSpeed * 9f;
-
-            Func<string, IEnumerator> TactileStroke;
-            float delay;
-            StrokeType strokeType;
-            if (type == "robot")
-            {
-                strokeType = StrokeType.Robot;
-                TactileStroke = RobotStroke;
-                
-                float tactileApproachTime = 12.8f / tactileSpeed;  // 12.8 = approach distance in cm
-                delay = trueApproachTime - tactileApproachTime - RobotDelayOffset;
-                // delay = visualApproachTime - tactileApproachTime - RobotDelays[id];
-            }
-            else if (type == "vibreurs")
-            {
-                strokeType = StrokeType.Vibrator;
-                TactileStroke = VibratorStroke;
-                delay = trueApproachTime - VibratorDelayOffset;
-                // delay = (float)VisualManager.RouteLengths[0] / speed_cms - VibratorDelays[id];
-            }
-            else
-            {
-                return;
-            }
-            Debug.Log("delai total: " + delay);
-
-            if (delay < 0)  // TactileStroke should run before VisualStroke
-            {
-                // // execute VisualStroke after abs(delay) seconds
-                // IEnumerator coroutine = WaitAndRun(Math.Abs(delay), VisualStroke, arg);
-                // StartCoroutine(coroutine);
-
-                StartCoroutine(TactileStroke(tactileArg));
-                
-                StartCoroutine(IsRobotMoving());
-                int timeout = 3_000;  // 3 seconds
-                while (!RobotMoving && timeout > 0)
-                {
-                    if (!IsRobotMovingRunning)
-                    {
-                        StartCoroutine(IsRobotMoving());
-                    }
-                    Thread.Sleep(1000 / 60);
-                    timeout -= 1000 / 60;
-                }
-                // Thread.Sleep((int)(Math.Abs(delay) * 1000));
-                // VisualStroke(arg);
-                IEnumerator coroutine = WaitAndRun(Math.Abs(delay), VisualStroke, arg, strokeType);
-                StartCoroutine(coroutine);
-            }
-            else  // TactileStroke should run after VisualStroke
-            {
-                // execute TactileStroke after delay seconds
-                IEnumerator coroutine = WaitAndRun(delay, TactileStroke(tactileArg));
-                StartCoroutine(coroutine);
-
-                VisualStroke(arg, strokeType);
-            }
+            StartCoroutine(StimulateOnce(tactileSpeed, visualSpeed, strokeType, delayOffset));
         }
+        
         return TaskOnClickWithArg;
     }
 
-    private IEnumerator RobotStroke(string speed_cms_s)
+    private IEnumerator RobotStroke(float speed_cms)
     {
-        Redis.Publish(RedisChannels.stroke_speed, speed_cms_s.ToString());
-        yield return null;        
+        Redis.Publish(RedisChannels.stroke_speed, speed_cms.ToString());
+        yield break;        
     }
 
-    private IEnumerator VibratorStroke(string speed_cms_s)
+    private IEnumerator VibratorStroke(float speed_cms)
     {
-        float speed_cms = float.Parse(speed_cms_s);
         float time_margin_s = 0.5f;
         float stimulation_time = 9.0f / speed_cms + time_margin_s;
         string speed_cms_str;
@@ -223,7 +217,7 @@ public class ManualStimulus : MonoBehaviour
         Redis.Set(RedisChannels.stimulus_done, "true");
     }
 
-    private void VisualStroke(string speed_cms, StrokeType strokeType)
+    private void VisualStroke(float speed_cms, StrokeType strokeType)
     {
         StartCoroutine(VisualManager.GoByTheRouteOnce(speed_cms, StrokeLengthCm, strokeType));
     }
