@@ -1,7 +1,35 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Windows.Forms;
 using UnityEngine;
+
+public class ButtonLatch
+{
+    public bool IsSet = false;
+    public bool Rising = false;
+
+    public void Update(bool value)
+    {
+        if (value)
+        {
+            if (!IsSet)
+            {
+                IsSet = true;
+                Rising = true;
+            }
+            else
+            {
+                Rising = false;
+            }
+        }
+        else
+        {
+            IsSet = false;
+            Rising = false;
+        }
+    }
+}
 
 [Serializable]
 public class Joycon
@@ -11,8 +39,11 @@ public class Joycon
     public string Guid;
     public float PowerLevel;
     public float[] Axes;
+    public ButtonLatch[] AxisLatches;
     public float[] Buttons;
+    public ButtonLatch[] ButtonLatches;
     public float[] Hats;
+    public ButtonLatch[] HatLatches;
 }
 
 public class SwitchControllerPassthrough : MonoBehaviour
@@ -76,14 +107,17 @@ public class SwitchControllerPassthrough : MonoBehaviour
                 string numAxesStr = Redis.Get($"{k}:num_axes");
                 int numAxes = ParseWithDefault(numAxesStr, defaultNum);
                 Joycons[k].Axes = new float[numAxes];
+                Joycons[k].AxisLatches = new ButtonLatch[numAxes];
 
                 string numButtonsStr = Redis.Get($"{k}:num_buttons");
                 int numButtons = ParseWithDefault(numAxesStr, defaultNum);
                 Joycons[k].Buttons = new float[numButtons];
+                Joycons[k].ButtonLatches = new ButtonLatch[numButtons];
 
                 string numHatsStr = Redis.Get($"{k}:num_hats");
                 int numHats = ParseWithDefault(numHatsStr, defaultNum);
                 Joycons[k].Hats = new float[numHats];
+                Joycons[k].HatLatches = new ButtonLatch[numHats];
             }
 
             string tempStr;
@@ -99,18 +133,21 @@ public class SwitchControllerPassthrough : MonoBehaviour
                 tempStr = Redis.Get($"{k}:axes:{j}");
                 temp = ParseWithDefault(tempStr, tempDef);
                 Joycons[k].Axes[j] = temp;
+                Joycons[k].AxisLatches[j].Update(temp > 0.5f || temp < -0.5f);
             }
             for (int j = 0; j < Joycons[k].Buttons.Length; j++)
             {
                 tempStr = Redis.Get($"{k}:buttons:{j}");
                 temp = ParseWithDefault(tempStr, tempDef);
                 Joycons[k].Buttons[j] = temp;
+                Joycons[k].ButtonLatches[j].Update(temp > 0.0f);
             }
             for (int j = 0; j < Joycons[k].Hats.Length; j++)
             {
                 tempStr = Redis.Get($"{k}:hats:{j}");
                 temp = ParseWithDefault(tempStr, tempDef);
                 Joycons[k].Hats[j] = temp;
+                // Joycons[k].HatLatches[j].Update(???);  // not used
             }
         }
 
