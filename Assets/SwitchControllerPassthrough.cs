@@ -9,6 +9,13 @@ public class ButtonLatch
     public bool IsSet = false;
     public bool Rising = false;
 
+    public ButtonLatch()
+    {
+        IsSet = false;
+        Rising = false;
+
+    }
+
     public void Update(bool value)
     {
         if (value)
@@ -50,6 +57,8 @@ public class SwitchControllerPassthrough : MonoBehaviour
 {
     [SerializeField]
     private RedisManager Redis;
+    public string DebugVar;
+
     public Dictionary<string, Joycon> Joycons;
 
     public float ParseWithDefault(string toParse, float defaultValue)
@@ -92,6 +101,7 @@ public class SwitchControllerPassthrough : MonoBehaviour
             return;
 
         string[] connectedJoyconIdsList = connectedJoyconIds.Split(':');
+        Debug.Log(connectedJoyconIds);
 
         // update connected joycons values, creating when necessary
         for (int i = 0; i < connectedJoyconIdsList.Length; i++)
@@ -99,6 +109,7 @@ public class SwitchControllerPassthrough : MonoBehaviour
             string k = connectedJoyconIdsList[i];
             if (!Joycons.ContainsKey(k))
             {
+                Debug.Log("new joycon added");
                 Joycons.Add(k, new Joycon());
                 Joycons[k].Name = Redis.Get($"{k}:name");
                 Joycons[k].Guid = Redis.Get($"{k}:guid");
@@ -108,16 +119,25 @@ public class SwitchControllerPassthrough : MonoBehaviour
                 int numAxes = ParseWithDefault(numAxesStr, defaultNum);
                 Joycons[k].Axes = new float[numAxes];
                 Joycons[k].AxisLatches = new ButtonLatch[numAxes];
+                for (int j = 0; j < numAxes; j++)
+                    Joycons[k].AxisLatches[j] = new ButtonLatch();
+                Debug.Log("num axes: " + numAxes);
 
                 string numButtonsStr = Redis.Get($"{k}:num_buttons");
-                int numButtons = ParseWithDefault(numAxesStr, defaultNum);
+                int numButtons = ParseWithDefault(numButtonsStr, defaultNum);
                 Joycons[k].Buttons = new float[numButtons];
                 Joycons[k].ButtonLatches = new ButtonLatch[numButtons];
+                for (int j = 0; j < numButtons; j++)
+                    Joycons[k].ButtonLatches[j] = new ButtonLatch();
+                Debug.Log("num buttons: " + numButtons);
 
                 string numHatsStr = Redis.Get($"{k}:num_hats");
                 int numHats = ParseWithDefault(numHatsStr, defaultNum);
                 Joycons[k].Hats = new float[numHats];
                 Joycons[k].HatLatches = new ButtonLatch[numHats];
+                for (int j = 0; j < numHats; j++)
+                    Joycons[k].HatLatches[j] = new ButtonLatch();
+                Debug.Log("num hats: " + numHats);
             }
 
             string tempStr;
@@ -134,6 +154,7 @@ public class SwitchControllerPassthrough : MonoBehaviour
                 temp = ParseWithDefault(tempStr, tempDef);
                 Joycons[k].Axes[j] = temp;
                 Joycons[k].AxisLatches[j].Update(temp > 0.5f || temp < -0.5f);
+            DebugVar = Joycons[k].Axes[0].ToString();
             }
             for (int j = 0; j < Joycons[k].Buttons.Length; j++)
             {

@@ -37,18 +37,17 @@ public class UserInputReaderCongruency : MonoBehaviour
 
     void Reset()
     {   
+        Debug.Log("reset");
         currSelectedItem = 0;
         currSelectedToggle = 0;
+        Congruency.isOn = false;
+        Incongruency.isOn = false;
     }
 
     void Submit()
     {
-        if (!Congruency.isOn || !Incongruency.isOn)
-            return;
-
-        // submit answer
-
-        Reset();
+        if (Congruency.isOn || Incongruency.isOn)
+            Reset();
     }
 
     void Awake()
@@ -106,6 +105,7 @@ public class UserInputReaderCongruency : MonoBehaviour
         IncongruencyText.color = Color.black;
         CongruencyText.color = Color.black;
         SubmitText.color = Color.black;
+        Debug.Log(currSelectedItem + " " + currSelectedToggle + " " + okButtonPressed);
         switch (currSelectedItem)
         {
             case 0:
@@ -113,20 +113,38 @@ public class UserInputReaderCongruency : MonoBehaviour
             case 1:  // selecting one of the toggles
                 if (joystickMovementLeftRight == "left")
                 {
-                    currSelectedToggle = Math.Min(0, currSelectedToggle - 1);
-                    CongruencyText.color = Color.green;
+                    currSelectedToggle = Math.Max(0, currSelectedToggle - 1);
                 }
-                if (joystickMovementLeftRight == "right")
+                else if (joystickMovementLeftRight == "right")
                 {
-                    currSelectedToggle = Math.Max(0, currSelectedToggle + 1);
-                    IncongruencyText.color = Color.green;
+                    currSelectedToggle = Math.Min(1, currSelectedToggle + 1);
+                }
+                switch (currSelectedToggle)
+                {
+                    case 0:
+                        CongruencyText.color = Color.green;
+                        if (okButtonPressed)
+                        {
+                            Congruency.isOn = true;
+                            Incongruency.isOn = false;
+                        }
+                        break;
+                    case 1:
+                        IncongruencyText.color = Color.green;
+                        if (okButtonPressed)
+                        {
+                            Incongruency.isOn = true;
+                            Congruency.isOn = false;
+                        }
+                        break;
+                    default:
+                        break;
                 }
                 break;
             case 2:
                 SubmitText.color = Color.green;
                 if (okButtonPressed)
                     Submit();
-
                 break;
             default:
                 break;

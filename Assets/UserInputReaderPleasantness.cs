@@ -38,10 +38,13 @@ public class UserInputReaderPleasantness : MonoBehaviour
     private SwitchControllerPassthrough SwitchControllerPassthrough;
 
     private int currSelectedItem;
+    private System.Random rng;
 
     void Reset()
     {   
         currSelectedItem = 0;
+        Pleasantness.value = rng.Next(1, 1001);
+        Intensity.value = rng.Next(1, 1001);
     }
 
     void Submit()
@@ -53,6 +56,7 @@ public class UserInputReaderPleasantness : MonoBehaviour
 
     void Awake()
     {
+        rng = new System.Random();
         Reset();
     }
 
@@ -93,7 +97,7 @@ public class UserInputReaderPleasantness : MonoBehaviour
 
         if (joystickMovementUpDown == "down")  // joystick latch is down
         {
-            currSelectedItem = Math.Min(2, currSelectedItem + 1);
+            currSelectedItem = Math.Min(3, currSelectedItem + 1);
         }
         if (joystickMovementUpDown == "up")  // joystick latch is up
         {
@@ -112,7 +116,8 @@ public class UserInputReaderPleasantness : MonoBehaviour
 
                 for (int i = 0; i < axisValues.Length; i++)
                 {
-                    Pleasantness.value += axisValues[i] * SliderCoeff;
+                    if (Math.Abs(axisValues[i]) > 0.3)
+                        Pleasantness.value += axisValues[i] * SliderCoeff;
                 }
 
                 break;
@@ -121,7 +126,8 @@ public class UserInputReaderPleasantness : MonoBehaviour
 
                 for (int i = 0; i < axisValues.Length; i++)
                 {
-                    Intensity.value += axisValues[i] * SliderCoeff;
+                    if (Math.Abs(axisValues[i]) > 0.3)
+                        Intensity.value += axisValues[i] * SliderCoeff;
                 }
 
                 break;

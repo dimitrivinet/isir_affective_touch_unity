@@ -401,7 +401,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 0
+  m_IsActive: 1
 --- !u!224 &32988351
 RectTransform:
   m_ObjectHideFlags: 0
@@ -440,9 +440,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 0b8243c519c106d4da3bf3c524b205e3, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  OkButtons: 
-  UpToDownAxes: 
-  LeftToRightAxes: 
+  OkButtons: 000000000100000002000000030000000e0000000f0000001000000011000000
+  UpToDownAxes: 0100000003000000
+  LeftToRightAxes: 0000000002000000
   Congruency: {fileID: 912696780}
   CongruencyText: {fileID: 630435083}
   Incongruency: {fileID: 114395096}
@@ -2225,7 +2225,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!224 &148774513
 RectTransform:
   m_ObjectHideFlags: 0
@@ -2262,14 +2262,14 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 3d9efeb97f5d6d34cbdbe92985ff479a, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  OkButtons: 
-  UpToDownAxes: 
-  LeftToRightAxes: 
+  OkButtons: 000000000100000002000000030000000e0000000f0000001000000011000000
+  UpToDownAxes: 0100000003000000
+  LeftToRightAxes: 0000000002000000
   Pleasantness: {fileID: 1520406856}
   PleasantnessText: {fileID: 1774538160}
   Intensity: {fileID: 1579171789}
   IntensityText: {fileID: 1832402322}
-  SliderCoeff: 1
+  SliderCoeff: 15
   SubmitText: {fileID: 1232061026}
   SwitchControllerPassthrough: {fileID: 871297273}
 --- !u!1 &149612174
@@ -4238,7 +4238,7 @@ RectTransform:
   m_Father: {fileID: 972270361}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
-  m_AnchorMax: {x: 0, y: 0}
+  m_AnchorMax: {x: 0, y: 1}
   m_AnchoredPosition: {x: 0, y: 0}
   m_SizeDelta: {x: 10, y: 0}
   m_Pivot: {x: 0.5, y: 0.5}
@@ -4313,7 +4313,7 @@ RectTransform:
   m_Father: {fileID: 829135269}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
-  m_AnchorMax: {x: 0, y: 0}
+  m_AnchorMax: {x: 0, y: 1}
   m_AnchoredPosition: {x: 0, y: 0}
   m_SizeDelta: {x: 20, y: 0}
   m_Pivot: {x: 0.5, y: 0.5}
@@ -11164,6 +11164,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   Redis: {fileID: 1863802832}
+  DebugVar: 
 --- !u!1 &912696778
 GameObject:
   m_ObjectHideFlags: 0
@@ -18169,7 +18170,7 @@ RectTransform:
   m_Father: {fileID: 14431427}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
-  m_AnchorMax: {x: 0, y: 0}
+  m_AnchorMax: {x: 0, y: 1}
   m_AnchoredPosition: {x: 0, y: 0}
   m_SizeDelta: {x: 10, y: 0}
   m_Pivot: {x: 0.5, y: 0.5}
@@ -18594,7 +18595,6 @@ GameObject:
   - component: {fileID: 1667922143}
   - component: {fileID: 1667922145}
   - component: {fileID: 1667922146}
-  - component: {fileID: 1667922147}
   m_Layer: 0
   m_Name: EventSystem
   m_TagString: Untagged
@@ -18687,20 +18687,6 @@ MonoBehaviour:
   SubmitText: {fileID: 1520333394}
   RedisManager: {fileID: 1863802832}
   CurrentSelected: 0
---- !u!114 &1667922147
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1667922141}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 40af9947676d9d141bcb36205d70652b, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  Congruent: {fileID: 0}
-  Incongruent: {fileID: 0}
 --- !u!4 &1677570719 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 4453513310108136, guid: 835e735ca71bf78459fb2cababd74112, type: 3}
@@ -20378,7 +20364,7 @@ RectTransform:
   m_Father: {fileID: 574646895}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
-  m_AnchorMax: {x: 0, y: 0}
+  m_AnchorMax: {x: 0, y: 1}
   m_AnchoredPosition: {x: 0, y: 0}
   m_SizeDelta: {x: 20, y: 0}
   m_Pivot: {x: 0.5, y: 0.5}
