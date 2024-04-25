@@ -75,7 +75,7 @@ public class UserInputReaderCongruency : MonoBehaviour
                 {
                     if (axValue < -0.5)
                         joystickMovementUpDown = "up";
-                    else
+                    else if (axValue > 0.5)
                         joystickMovementUpDown = "down";
                 }
             }
@@ -87,7 +87,7 @@ public class UserInputReaderCongruency : MonoBehaviour
                 {
                     if (axValue < -0.5)
                         joystickMovementLeftRight = "left";
-                    else
+                    else if (axValue > 0.5)
                         joystickMovementLeftRight = "right";
                 }
             }
@@ -97,7 +97,7 @@ public class UserInputReaderCongruency : MonoBehaviour
         {
             currSelectedItem = Math.Min(2, currSelectedItem + 1);
         }
-        if (joystickMovementUpDown == "up")  // joystick latch is up
+        else if (joystickMovementUpDown == "up")  // joystick latch is up
         {
             currSelectedItem = Math.Max(0, currSelectedItem - 1);
         }

@@ -1,19 +1,23 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Threading;
 using System.Windows.Forms;
 using UnityEngine;
 
 public class ButtonLatch
 {
     public bool IsSet = false;
-    public bool Rising = false;
+    public bool Rising 
+    {
+        get { bool ret = rising; rising = false; return ret; }
+    }
+    private bool rising = false;
 
     public ButtonLatch()
     {
         IsSet = false;
-        Rising = false;
-
+        rising = false;
     }
 
     public void Update(bool value)
@@ -23,17 +27,12 @@ public class ButtonLatch
             if (!IsSet)
             {
                 IsSet = true;
-                Rising = true;
-            }
-            else
-            {
-                Rising = false;
+                rising = true;
             }
         }
         else
         {
             IsSet = false;
-            Rising = false;
         }
     }
 }
@@ -59,7 +58,26 @@ public class SwitchControllerPassthrough : MonoBehaviour
     private RedisManager Redis;
     public string DebugVar;
 
-    public Dictionary<string, Joycon> Joycons;
+    public Dictionary<string, Joycon> Joycons
+    {
+        get
+        {
+            Dictionary<string, Joycon> ret;
+            try{
+                lock (_lock)
+                {
+                    ret = new(joycons);
+                }
+            }
+            catch {
+                return null;
+            }
+            return ret;
+        }
+    }
+    private Dictionary<string, Joycon> joycons;
+    private Thread updaterThread;
+    private readonly object _lock = new();
 
     public float ParseWithDefault(string toParse, float defaultValue)
     {
@@ -90,12 +108,34 @@ public class SwitchControllerPassthrough : MonoBehaviour
 
     void Awake()
     {
-        Joycons = new();
+        joycons = new();
+
+        updaterThread = new Thread(new ThreadStart(JoyconUpdater));
+        updaterThread.Start();
     }
 
-    // Update is called once per frame
-    void Update()
+    public void JoyconUpdater()
     {
+        while (Thread.CurrentThread.IsAlive)
+        {
+            UpdateOnce();
+            Thread.Sleep(1000/60);
+        }
+    }
+
+    public void UpdateOnce()
+    {
+        Dictionary<string, Joycon> joycons_copy;
+        try{
+            lock (_lock)
+            {
+                joycons_copy = new(joycons);
+            }
+        }
+        catch {
+            return;
+        }
+
         string connectedJoyconIds = Redis.Get("joycon_ids");
         if (connectedJoyconIds == null)  // error with redis, or passthrough program not up
             return;
@@ -107,36 +147,36 @@ public class SwitchControllerPassthrough : MonoBehaviour
         for (int i = 0; i < connectedJoyconIdsList.Length; i++)
         {
             string k = connectedJoyconIdsList[i];
-            if (!Joycons.ContainsKey(k))
+            if (!joycons_copy.ContainsKey(k))
             {
                 Debug.Log("new joycon added");
-                Joycons.Add(k, new Joycon());
-                Joycons[k].Name = Redis.Get($"{k}:name");
-                Joycons[k].Guid = Redis.Get($"{k}:guid");
+                joycons_copy.Add(k, new Joycon());
+                joycons_copy[k].Name = Redis.Get($"{k}:name");
+                joycons_copy[k].Guid = Redis.Get($"{k}:guid");
 
                 int defaultNum = 0;
                 string numAxesStr = Redis.Get($"{k}:num_axes");
                 int numAxes = ParseWithDefault(numAxesStr, defaultNum);
-                Joycons[k].Axes = new float[numAxes];
-                Joycons[k].AxisLatches = new ButtonLatch[numAxes];
+                joycons_copy[k].Axes = new float[numAxes];
+                joycons_copy[k].AxisLatches = new ButtonLatch[numAxes];
                 for (int j = 0; j < numAxes; j++)
-                    Joycons[k].AxisLatches[j] = new ButtonLatch();
+                    joycons_copy[k].AxisLatches[j] = new ButtonLatch();
                 Debug.Log("num axes: " + numAxes);
 
                 string numButtonsStr = Redis.Get($"{k}:num_buttons");
                 int numButtons = ParseWithDefault(numButtonsStr, defaultNum);
-                Joycons[k].Buttons = new float[numButtons];
-                Joycons[k].ButtonLatches = new ButtonLatch[numButtons];
+                joycons_copy[k].Buttons = new float[numButtons];
+                joycons_copy[k].ButtonLatches = new ButtonLatch[numButtons];
                 for (int j = 0; j < numButtons; j++)
-                    Joycons[k].ButtonLatches[j] = new ButtonLatch();
+                    joycons_copy[k].ButtonLatches[j] = new ButtonLatch();
                 Debug.Log("num buttons: " + numButtons);
 
                 string numHatsStr = Redis.Get($"{k}:num_hats");
                 int numHats = ParseWithDefault(numHatsStr, defaultNum);
-                Joycons[k].Hats = new float[numHats];
-                Joycons[k].HatLatches = new ButtonLatch[numHats];
+                joycons_copy[k].Hats = new float[numHats];
+                joycons_copy[k].HatLatches = new ButtonLatch[numHats];
                 for (int j = 0; j < numHats; j++)
-                    Joycons[k].HatLatches[j] = new ButtonLatch();
+                    joycons_copy[k].HatLatches[j] = new ButtonLatch();
                 Debug.Log("num hats: " + numHats);
             }
 
@@ -146,35 +186,35 @@ public class SwitchControllerPassthrough : MonoBehaviour
 
             tempStr = Redis.Get($"{k}:power_level");
             temp = ParseWithDefault(tempStr, tempDef);
-            Joycons[k].PowerLevel = temp;
+            joycons_copy[k].PowerLevel = temp;
             
-            for (int j = 0; j < Joycons[k].Axes.Length; j++)
+            for (int j = 0; j < joycons_copy[k].Axes.Length; j++)
             {
                 tempStr = Redis.Get($"{k}:axes:{j}");
                 temp = ParseWithDefault(tempStr, tempDef);
-                Joycons[k].Axes[j] = temp;
-                Joycons[k].AxisLatches[j].Update(temp > 0.5f || temp < -0.5f);
-            DebugVar = Joycons[k].Axes[0].ToString();
+                joycons_copy[k].Axes[j] = temp;
+                joycons_copy[k].AxisLatches[j].Update(temp > 0.5f || temp < -0.5f);
+            DebugVar = joycons_copy[k].Axes[0].ToString();
             }
-            for (int j = 0; j < Joycons[k].Buttons.Length; j++)
+            for (int j = 0; j < joycons_copy[k].Buttons.Length; j++)
             {
                 tempStr = Redis.Get($"{k}:buttons:{j}");
                 temp = ParseWithDefault(tempStr, tempDef);
-                Joycons[k].Buttons[j] = temp;
-                Joycons[k].ButtonLatches[j].Update(temp > 0.0f);
+                joycons_copy[k].Buttons[j] = temp;
+                joycons_copy[k].ButtonLatches[j].Update(temp > 0.0f);
             }
-            for (int j = 0; j < Joycons[k].Hats.Length; j++)
+            for (int j = 0; j < joycons_copy[k].Hats.Length; j++)
             {
                 tempStr = Redis.Get($"{k}:hats:{j}");
                 temp = ParseWithDefault(tempStr, tempDef);
-                Joycons[k].Hats[j] = temp;
+                joycons_copy[k].Hats[j] = temp;
                 // Joycons[k].HatLatches[j].Update(???);  // not used
             }
         }
 
         // cleanup disconnected joycons
         List<string> keysToRemove = new();
-        foreach (var k in Joycons.Keys)
+        foreach (var k in joycons_copy.Keys)
         {
             if (!Array.Exists(connectedJoyconIdsList, el => el == k))
             {
@@ -183,7 +223,18 @@ public class SwitchControllerPassthrough : MonoBehaviour
         }
         foreach (var kr in keysToRemove)
         {
-            Joycons.Remove(kr);
+            joycons_copy.Remove(kr);
+        }
+
+        
+        try{
+            lock (_lock)
+            {
+                joycons = new(joycons_copy);
+            }
+        }
+        catch {
+            return;
         }
     }
 }
