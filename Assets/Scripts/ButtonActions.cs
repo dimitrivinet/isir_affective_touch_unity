@@ -5,13 +5,18 @@ using TMPro;
 using SFB;
 using System.IO;
 using StackExchange.Redis;
+using System;
+using System.Text.RegularExpressions;
 
 public class ButtonActions : MonoBehaviour
 {
     public TextMeshProUGUI CsvPath;
     public TextMeshProUGUI RedisConnString;
+    public TextMeshProUGUI LoadedNCsv;
     public ObjectPinning VisualTrajectory;
     public Experiment ExperimentManager;
+    public GameObject CongruencyExperiment;
+    public GameObject PleasantnessExperiment;
 
     public void Update()
     {
@@ -23,6 +28,16 @@ public class ButtonActions : MonoBehaviour
         {
             RunExperiment();
         }
+        if (Input.GetKeyDown(KeyCode.S))
+        {
+            SwitchExperiments();
+        }
+    }
+    
+    public void SwitchExperiments()
+    {
+        CongruencyExperiment.SetActive(!CongruencyExperiment.activeSelf);
+        PleasantnessExperiment.SetActive(!PleasantnessExperiment.activeSelf);
     }
 
     public void RunExperiment()
@@ -82,24 +97,42 @@ public class ButtonActions : MonoBehaviour
         }
         MainManager.Instance.trials_str = contents;
         MainManager.Instance.ParseTrials();
+
+        LoadedNCsv.text = $"Loaded {MainManager.Instance.trials.Count} trials.";
+        LoadedNCsv.gameObject.SetActive(true);
+
+        MainManager.Instance.OutputCsvPath = CsvPath.text + ".out";
+    }
+
+    private string ParseRedisConnString(string redisConnString)
+    {
+        string ret = redisConnString.Trim();
+        ret = Regex.Replace(ret, @"[^a-zA-Z0-9.:]+", "");
+        return ret;
     }
 
     public void TryRedis() 
     {
+        string redisConnString = ParseRedisConnString(RedisConnString.text);
         try
         {
-            using (ConnectionMultiplexer redis = ConnectionMultiplexer.Connect(RedisConnString.text)) {}
+            Debug.Log($"Connecting to redis at '{redisConnString}'");
+            // using (ConnectionMultiplexer redis = ConnectionMultiplexer.Connect("10.42.0.1:6379")) {}
+            using (ConnectionMultiplexer redis = ConnectionMultiplexer.Connect(redisConnString)) {}
             RedisConnString.color = Color.green;
         }
-        catch
+        catch (Exception ex)
         {
+            Debug.Log("Exception: " + ex.Message);
             RedisConnString.color = Color.red;
         }        
+        MainManager.Instance.RedisConnString = redisConnString;
     }
 
     public void SaveRedisConnString()
     {
-        MainManager.Instance.RedisConnString = RedisConnString.text;
+        string redisConnString = ParseRedisConnString(RedisConnString.text);
+        MainManager.Instance.RedisConnString = redisConnString;
     }
 
     public void ToggleVisualTrajectory()

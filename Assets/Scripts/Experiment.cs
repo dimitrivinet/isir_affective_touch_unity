@@ -2,21 +2,32 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
-using System.Linq.Expressions;
-using System.Threading;
 using Unity.VisualScripting;
 using UnityEngine;
+
+
+public enum ExperimentStatus 
+{
+    NotStarted,
+    Running,
+    Finished,
+    Interrupted,
+}
 
 public class Experiment : MonoBehaviour
 {
     public bool Stop = false;
+    public ExperimentStatus Status = ExperimentStatus.NotStarted;
     public float SecondsBetweenStimTypes = 90;
     public float SecondsBetweenStims = 20;
     public ManualStimulus StimulusManager;
     public RedisManager Redis;
     public Vibrators VibratorsManager;
     [SerializeField]
-    public Trial[] Trials;
+    public List<Trial> Trials;
+    public int CurrTrial;
+    public string UserGaveInput = "false";
+
     private readonly float[] ValidSpeeds = { 0.5F, 1, 3, 10, 30 };
     private IEnumerator RoutineEnumerator;
     private Coroutine Routine;
@@ -35,24 +46,24 @@ public class Experiment : MonoBehaviour
 
     private IEnumerator StartExperiment()
     {
-        List<Trial> trials;
+        if (Status == ExperimentStatus.Running)
+        {
+            yield break;
+        }
+
         Debug.Log("Get trials list");
         if (MainManager.Instance != null)
         {
-            trials = MainManager.Instance.trials;
-        }
-        else
-        {
-            trials = new List<Trial>(Trials);
+            Trials = MainManager.Instance.trials;
         }
 
-        if (!trials.Any())
+        if (!Trials.Any())
         {
             yield break;
         }
 
         Debug.Log("Check if trials are ok");
-        foreach (var trial in trials)
+        foreach (var trial in Trials)
         {
             if (!ValidSpeeds.Contains(trial.TactileSpeed))
             {
@@ -65,23 +76,27 @@ public class Experiment : MonoBehaviour
         VibratorsManager.ConnectSTM();
         Debug.Log("Setup Redis variables");
         Redis.Set(RedisChannels.user_gave_input, "false");
+        UserGaveInput = "false";
 
-        int i = 0;
+        CurrTrial = 0;
         Debug.Log("Set initial trial type");
-        var last_trial_type = trials[0].Stimulus;
+        var last_trial_type = Trials[0].Stimulus;
+
+        Status = ExperimentStatus.Running;
 
         Debug.Log("Main loop");
-        while (i < trials.Count())
+        while (CurrTrial < Trials.Count())
         {
             if (Stop)
             {
+                Status = ExperimentStatus.Interrupted;
                 yield break;
             }
 
-            var trial = trials[i];
+            var trial = Trials[CurrTrial];
 
-            Debug.Log($"trial n.{i}: {trial}");
-            Redis.Set(RedisChannels.current_trial, $"{i + 1}");
+            Debug.Log($"trial n.{CurrTrial}: {trial}");
+            Redis.Set(RedisChannels.current_trial, $"{CurrTrial + 1}");
 
             if (trial.Stimulus != last_trial_type)
             {
@@ -95,6 +110,7 @@ public class Experiment : MonoBehaviour
 
             if (Stop)
             {
+                Status = ExperimentStatus.Interrupted;
                 yield break;
             }
 
@@ -121,6 +137,7 @@ public class Experiment : MonoBehaviour
             {
                 if (Stop)
                 {
+                    Status = ExperimentStatus.Interrupted;
                     yield break;
                 }
 
@@ -128,21 +145,21 @@ public class Experiment : MonoBehaviour
                 cont = Redis.Get(RedisChannels.stimulus_done) == "true";
             }
 
-            cont = Redis.Get(RedisChannels.user_gave_input) == "true";
-            cont = true;  // skip waiting for answer
+            cont = Redis.Get(RedisChannels.user_gave_input) == "true" || UserGaveInput == "true";
+            // cont = true;  // skip waiting for answer
             float toSleepS = SecondsBetweenStims - 3.0f;
             float checkIntervalS = 0.1f;
             Debug.Log("waiting for user answer");
             while (!cont)
             {
-                cont = Redis.Get(RedisChannels.user_gave_input) == "true";
-                if (Redis.Get(RedisChannels.user_gave_input) == "redo")
+                cont = Redis.Get(RedisChannels.user_gave_input) == "true" || UserGaveInput == "true";
+                if (Redis.Get(RedisChannels.user_gave_input) == "redo" || UserGaveInput == "redo")
                 {
                     Debug.Log("redo");
-                    i--;
+                    CurrTrial--;
                     cont = true;
                 }
-                yield return new WaitForSeconds(checkIntervalS / 1000.0f);
+                yield return new WaitForSeconds(checkIntervalS);
                 toSleepS -= checkIntervalS;
             }
 
@@ -155,6 +172,7 @@ public class Experiment : MonoBehaviour
             }
 
             Redis.Set(RedisChannels.user_gave_input, "false");
+            UserGaveInput = "false";
             Redis.Set(RedisChannels.sleeping, "3");
             Redis.Set($"{RedisChannels.sleeping}:time", DateTime.UtcNow.ToString("o"));
             yield return new WaitForSeconds(3.0f);
@@ -162,9 +180,10 @@ public class Experiment : MonoBehaviour
 
             Debug.Log("next stimulus");
 
-            i += 1;
+            CurrTrial++;
         }
         Debug.Log("All trials done");
+        Status = ExperimentStatus.Finished;
         yield break;
     }
 }

@@ -25,6 +25,7 @@ public class MainManager : MonoBehaviour
     public List<Trial> trials;
     public List<string> trials_str;
     public string RedisConnString;
+    public string OutputCsvPath;
 
     private void Awake()
     {
@@ -46,15 +47,16 @@ public class MainManager : MonoBehaviour
         {
             try
             {
-                var split = trial_str.Split(";");
+                var split = trial_str.Split(",");
                 string stimulus = split[0];
-                float visualSpeed = float.Parse(split[1]);
-                float tactileSpeed = float.Parse(split[2]);
+                float tactileSpeed = float.Parse(split[1]);
+                float visualSpeed = float.Parse(split[2]);
 
                 trials.Add(new Trial(stimulus, visualSpeed, tactileSpeed));
             }
             catch
             {
+                Debug.Log($"error parsing trial {trial_str}");
                 continue;
             }
         }

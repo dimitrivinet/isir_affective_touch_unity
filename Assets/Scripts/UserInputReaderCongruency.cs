@@ -1,4 +1,5 @@
 using System;
+using System.IO;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
@@ -31,9 +32,16 @@ public class UserInputReaderCongruency : MonoBehaviour
 
     [SerializeField]
     private SwitchControllerPassthrough SwitchControllerPassthrough;
+    
+    [SerializeField]
+    private Experiment ExperimentManager;
+
+    [SerializeField]
+    private string OutputCsvPath;
 
     private int currSelectedItem;
     private int currSelectedToggle;
+    private bool writeToFile;
 
     void Reset()
     {   
@@ -42,17 +50,54 @@ public class UserInputReaderCongruency : MonoBehaviour
         currSelectedToggle = 0;
         Congruency.isOn = false;
         Incongruency.isOn = false;
+        ExperimentManager.UserGaveInput = "true";
     }
 
     void Submit()
     {
-        if (Congruency.isOn || Incongruency.isOn)
-            Reset();
+        if (!(Congruency.isOn || Incongruency.isOn))
+            return;
+        
+        Trial trial = ExperimentManager.Trials[ExperimentManager.CurrTrial];
+        bool congruencyReal = trial.TactileSpeed.ToString() == trial.VisualSpeed.ToString();
+
+        string[] data = new[]{
+            trial.Stimulus,
+            trial.TactileSpeed.ToString(),
+            trial.VisualSpeed.ToString(),
+            congruencyReal ? "congruent" : "incongruent",
+            Congruency.isOn ? "congruent" : "incongruent",
+        };
+        string line = string.Join(',', data);
+        Debug.Log(line);
+        if (writeToFile)
+        {
+            using (StreamWriter outputFile = new(OutputCsvPath, true))
+            {
+                outputFile.WriteLine(line);
+            }
+        }
+        
+        Reset();
     }
 
     void Awake()
     {
         Reset();
+
+        if (MainManager.Instance.OutputCsvPath != null)
+        {
+            OutputCsvPath = MainManager.Instance.OutputCsvPath;
+        }
+        if (OutputCsvPath == null)
+        {
+            writeToFile = false;
+        }
+        else
+        {
+            writeToFile = true;
+            File.Create(OutputCsvPath);
+        }
     }
 
     void Update()
