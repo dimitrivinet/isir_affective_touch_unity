@@ -32,6 +32,11 @@ public class Experiment : MonoBehaviour
     private IEnumerator RoutineEnumerator;
     private Coroutine Routine;
 
+    public void SetUserInputDone()
+    {
+        UserGaveInput = "true";
+    }
+
     public void SpawnStartExperiment()
     {
         RoutineEnumerator = StartExperiment();

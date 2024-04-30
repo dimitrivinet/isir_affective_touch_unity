@@ -85,7 +85,6 @@ public class ButtonActions : MonoBehaviour
             CsvPath.color = Color.red;
             return;
         }
-
         List<string> contents = new();
         using (StreamReader sr = File.OpenText(path))
         {
