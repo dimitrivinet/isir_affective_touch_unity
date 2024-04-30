@@ -7,43 +7,43 @@ using UnityEngine.UI;
 public class UserInputReaderCongruency : MonoBehaviour
 {
     [SerializeField]
-    private int[] OkButtons;
+    protected int[] OkButtons;
 
     [SerializeField]
-    private int[] UpToDownAxes;
+    protected int[] UpToDownAxes;
 
     [SerializeField]
-    private int[] LeftToRightAxes;
+    protected int[] LeftToRightAxes;
 
     [SerializeField]
-    private Toggle Congruency;
+    protected Toggle Congruency;
 
     [SerializeField]
-    private TextMeshProUGUI CongruencyText;
+    protected TextMeshProUGUI CongruencyText;
 
     [SerializeField]
-    private Toggle Incongruency;
+    protected Toggle Incongruency;
 
     [SerializeField]
-    private TextMeshProUGUI IncongruencyText;
+    protected TextMeshProUGUI IncongruencyText;
 
     [SerializeField]
-    private TextMeshProUGUI SubmitText;
+    protected TextMeshProUGUI SubmitText;
 
     [SerializeField]
-    private SwitchControllerPassthrough SwitchControllerPassthrough;
+    protected SwitchControllerPassthrough SwitchControllerPassthrough;
     
     [SerializeField]
-    private Experiment ExperimentManager;
+    protected Experiment ExperimentManager;
 
     [SerializeField]
-    private string OutputCsvPath;
+    protected string OutputCsvPath;
 
-    private int currSelectedItem;
-    private int currSelectedToggle;
-    private bool writeToFile;
+    protected int currSelectedItem;
+    protected int currSelectedToggle;
+    protected bool writeToFile;
 
-    void Reset()
+    protected void Reset()
     {   
         Debug.Log("reset");
         currSelectedItem = 0;
@@ -53,7 +53,7 @@ public class UserInputReaderCongruency : MonoBehaviour
         ExperimentManager.UserGaveInput = "true";
     }
 
-    void Submit()
+    protected void Submit()
     {
         if (!(Congruency.isOn || Incongruency.isOn))
             return;
@@ -81,26 +81,29 @@ public class UserInputReaderCongruency : MonoBehaviour
         Reset();
     }
 
-    void Awake()
+    protected void Awake()
     {
         Reset();
 
-        if (MainManager.Instance.OutputCsvPath != null)
+        if (MainManager.Instance != null)
         {
-            OutputCsvPath = MainManager.Instance.OutputCsvPath;
+            if (MainManager.Instance.OutputCsvPath != null)
+            {
+                OutputCsvPath = MainManager.Instance.OutputCsvPath;
+            }    
         }
-        if (OutputCsvPath == null)
+        try
+        {
+            File.Create(OutputCsvPath);
+            writeToFile = true;
+        }
+        catch
         {
             writeToFile = false;
         }
-        else
-        {
-            writeToFile = true;
-            File.Create(OutputCsvPath);
-        }
     }
 
-    void Update()
+    protected void Update()
     {
         bool okButtonPressed = false;
         string joystickMovementUpDown = "none";

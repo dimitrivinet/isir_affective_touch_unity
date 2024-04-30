@@ -122,7 +122,7 @@ public class RouteFollow : MonoBehaviour
         return ret * 100;
     }
 
-    public IEnumerator GoByTheRouteOnce(float speed_cms, float stroke_length_cm, StrokeType strokeType)
+    public IEnumerator GoByTheRouteOnce(float speed_cms, float stroke_length_cm, StrokeType strokeType, float pStartAnim, float pEndAnim, float speedCmsTactile)
     {
         GoByTheRouteOnceRunning = true;
         bool oldDebugTraj = debugTraj;
@@ -131,9 +131,10 @@ public class RouteFollow : MonoBehaviour
 
         float oldApproachSpeed = ApproachSpeed;
         float oldStrokeSpeed = StrokeSpeed;
-        float baseAnimationTime = 0.14f;
+        float baseAnimationTime = 0.1f;
 
-        ApproachSpeed = speed_cms;
+        // ApproachSpeed = speed_cms;
+        ApproachSpeed = speedCmsTactile;
         StrokeSpeed = speed_cms;
 
         Vector3 p0 = routes[0].GetChild(0).position;
@@ -146,28 +147,39 @@ public class RouteFollow : MonoBehaviour
         //     yield return GoByTheRoute(i);
         // }
 
-        float animationSpeed = speed_cms / 10.0f;
+        // float animationSpeed = 1.0f / (3.5f * 5.0f);
+        float animationSpeed = speedCmsTactile / (3.5f * 5.0f);
+        // float animationSpeed = speedCmsTactile / 10.0f * 3.5f;
         Debug.Log("animationSpeed=" + animationSpeed);
         animator.SetFloat("Speed", animationSpeed);
+        // float animationTime = baseAnimationTime / animationSpeed;
         float animationTime = baseAnimationTime / animationSpeed;
-        
+
         yield return new WaitForSeconds(2);
 
-        float approachTime = (float)RouteLengths[0] / StrokeSpeed;
+        float approachTime = (float)RouteLengths[0] / ApproachSpeed;
         RouteAnimTrigger rat0 = new(animator, 0f, "Flex");
-        float animStartDelay = 0f;
+        float animStartDelay;
         if (strokeType == StrokeType.Vibrator)
         {
-            animStartDelay = approachTime - animationTime * 3.0f;
+            animStartDelay = approachTime * pStartAnim;            
+            // animStartDelay = approachTime - animationTime;            
+            // animStartDelay = approachTime - animationTime * 3.0f;
         }
         else if (strokeType == StrokeType.Robot)
         {
-            animStartDelay = approachTime - animationTime * 9.0f;
+            animStartDelay = approachTime * pStartAnim;            
+            // animStartDelay = approachTime - animationTime;            
+            // animStartDelay = approachTime - animationTime * 9.0f;
         }
         else
         {
             yield break;
         }
+        Debug.Log("animationTime=" + animationTime);
+        Debug.Log("approachTime=" + approachTime);
+        Debug.Log("animStartDelay=" + animStartDelay);
+
         // Debug.Log(approachTime + " : " + animationTime + " : " + animStartDelay);
         StartCoroutine(rat0.TriggerAfterSeconds(animStartDelay));
 
@@ -179,7 +191,8 @@ public class RouteFollow : MonoBehaviour
         
         float forwardTime = stroke_length_cm / speed_cms;
         RouteAnimTrigger rat1 = new(animator, 0f, "Unflex");
-        StartCoroutine(rat1.TriggerAfterSeconds(forwardTime - animationTime / 2.0f));
+        StartCoroutine(rat1.TriggerAfterSeconds(forwardTime * pEndAnim));
+        // StartCoroutine(rat1.TriggerAfterSeconds(forwardTime - animationTime / 2.0f));
         yield return GoForward(speed_cms, stroke_length_cm);
         if (TurnGreen)
         {
@@ -187,7 +200,8 @@ public class RouteFollow : MonoBehaviour
         }
         Vector3 oldRoute2Position = routes[2].position;
         routes[2].position = transform.position - AdjustedPosOffset;
-        yield return GoByTheRoute(2,  new RouteAnimTrigger(animator, 0.3f, "Unflex"));
+        // yield return GoByTheRoute(2,  new RouteAnimTrigger(animator, 0.3f, "Unflex"));
+        yield return GoByTheRoute(2,  null);
 
         routes[2].position = oldRoute2Position;
         ApproachSpeed = oldApproachSpeed;

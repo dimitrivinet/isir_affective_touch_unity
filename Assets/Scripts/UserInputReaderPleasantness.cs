@@ -7,47 +7,51 @@ using UnityEngine.UI;
 
 public class UserInputReaderPleasantness : MonoBehaviour
 {
-[SerializeField]
-    private int[] OkButtons;
+    [SerializeField]
+    protected int[] OkButtons;
 
     [SerializeField]
-    private int[] UpToDownAxes;
+    protected int[] UpToDownAxes;
 
     [SerializeField]
-    private int[] LeftToRightAxes;
+    protected int[] LeftToRightAxes;
 
     [SerializeField]
-    private Slider Pleasantness;
+    protected Slider Pleasantness;
 
     [SerializeField]
-    private TextMeshProUGUI PleasantnessText;
+    protected TextMeshProUGUI PleasantnessText;
 
     [SerializeField]
-    private Slider Intensity;
+    protected Slider Intensity;
 
     [SerializeField]
-    private TextMeshProUGUI IntensityText;
+    protected TextMeshProUGUI IntensityText;
+    [SerializeField]
+    protected Image PleasantnessFill;
+    [SerializeField]
+    protected Image IntensityFill;
     
     [SerializeField]
-    private float SliderCoeff;
+    protected float SliderCoeff;
 
     [SerializeField]
-    private TextMeshProUGUI SubmitText;
+    protected TextMeshProUGUI SubmitText;
 
     [SerializeField]
-    private SwitchControllerPassthrough SwitchControllerPassthrough;
+    protected SwitchControllerPassthrough SwitchControllerPassthrough;
     
     [SerializeField]
-    private Experiment ExperimentManager;
+    protected Experiment ExperimentManager;
 
     [SerializeField]
-    private string OutputCsvPath;
+    protected string OutputCsvPath;
 
-    private int currSelectedItem;
-    private System.Random rng;
-    private bool writeToFile;
+    protected int currSelectedItem;
+    protected System.Random rng;
+    protected bool writeToFile;
 
-    void Reset()
+    protected void Reset()
     {   
         currSelectedItem = 0;
         Pleasantness.value = rng.Next(1, 1001);
@@ -55,7 +59,7 @@ public class UserInputReaderPleasantness : MonoBehaviour
         ExperimentManager.UserGaveInput = "true";
     }
 
-    void Submit()
+    protected void Submit()
     {
         Trial trial = ExperimentManager.Trials[ExperimentManager.CurrTrial];
         float pleasantness = Pleasantness.value / 10.0f;  // [0 to 1000] to [0 to 100]
@@ -81,27 +85,33 @@ public class UserInputReaderPleasantness : MonoBehaviour
         Reset();
     }
 
-    void Awake()
+    protected void Awake()
     {
         rng = new System.Random();
         Reset();
 
-        if (MainManager.Instance.OutputCsvPath != null)
+        if (MainManager.Instance != null)
         {
-            OutputCsvPath = MainManager.Instance.OutputCsvPath;
+            if (MainManager.Instance.OutputCsvPath != null)
+            {
+                OutputCsvPath = MainManager.Instance.OutputCsvPath;
+            }    
         }
-        if (OutputCsvPath == null)
+        try
+        {
+            if (!File.Exists(OutputCsvPath))
+            {
+                File.Create(OutputCsvPath);
+            }
+                writeToFile = true;
+        }
+        catch
         {
             writeToFile = false;
         }
-        else
-        {
-            writeToFile = true;
-            File.Create(OutputCsvPath);
-        }
     }
 
-    void Update()
+    protected void Update()
     {
         var joycons = new Dictionary<string, Joycon>(SwitchControllerPassthrough.Joycons);
         bool okButtonPressed = false;

@@ -141,12 +141,17 @@ public class SwitchControllerPassthrough : MonoBehaviour
             return;
 
         string[] connectedJoyconIdsList = connectedJoyconIds.Split(':');
-        Debug.Log(connectedJoyconIds);
 
         // update connected joycons values, creating when necessary
         for (int i = 0; i < connectedJoyconIdsList.Length; i++)
         {
             string k = connectedJoyconIdsList[i];
+            bool invalidK = string.IsNullOrEmpty(k) || string.IsNullOrWhiteSpace(k);
+            if (invalidK)
+            {
+                continue;
+            }
+
             if (!joycons_copy.ContainsKey(k))
             {
                 Debug.Log("new joycon added");
