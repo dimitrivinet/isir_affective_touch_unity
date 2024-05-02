@@ -75,6 +75,7 @@ public class UserInputReaderCongruency : MonoBehaviour
             using (StreamWriter outputFile = new(OutputCsvPath, true))
             {
                 outputFile.WriteLine(line);
+                outputFile.Flush();
             }
         }
         
@@ -94,8 +95,17 @@ public class UserInputReaderCongruency : MonoBehaviour
         }
         try
         {
-            File.Create(OutputCsvPath);
+            if (!File.Exists(OutputCsvPath))
+            {
+                File.Create(OutputCsvPath);
+            }
             writeToFile = true;
+            
+            using (StreamWriter outputFile = new(OutputCsvPath, true))
+            {
+                outputFile.WriteLine("stimulus,tactileSpeed,visualSpeed,congruencyReal,congruencyParticipant");
+                outputFile.Flush();
+            }
         }
         catch
         {
@@ -153,7 +163,6 @@ public class UserInputReaderCongruency : MonoBehaviour
         IncongruencyText.color = Color.black;
         CongruencyText.color = Color.black;
         SubmitText.color = Color.black;
-        Debug.Log(currSelectedItem + " " + currSelectedToggle + " " + okButtonPressed);
         switch (currSelectedItem)
         {
             case 0:

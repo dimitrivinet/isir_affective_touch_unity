@@ -5,6 +5,7 @@ using UnityEngine;
 
 public class KeyboardUserInputReaderPleasantness : UserInputReaderPleasantness
 {
+    public static Color32 SELECTED_COLOR = new (0x73, 0xF5, 0x73, 0xFF);
     new void Update()
     {
         bool okButtonPressed = false;
@@ -36,13 +37,16 @@ public class KeyboardUserInputReaderPleasantness : UserInputReaderPleasantness
         SubmitText.color = Color.black;
         PleasantnessFill.color = Color.white;
         IntensityFill.color = Color.white;
+        PleasantnessHandle.color = Color.white;
+        IntensityHandle.color = Color.white;
         switch (currSelectedItem)
         {
             case 0:
                 break;
             case 1:
-                PleasantnessText.color = Color.green;
-                PleasantnessFill.color = Color.green;
+                // PleasantnessText.color = SELECTED_COLOR;
+                PleasantnessFill.color = SELECTED_COLOR;
+                PleasantnessHandle.color = SELECTED_COLOR;
 
                 for (int i = 0; i < axisValues.Length; i++)
                 {
@@ -52,8 +56,9 @@ public class KeyboardUserInputReaderPleasantness : UserInputReaderPleasantness
 
                 break;
             case 2:
-                IntensityText.color = Color.green;
-                IntensityFill.color = Color.green;
+                // IntensityText.color = SELECTED_COLOR;
+                IntensityFill.color = SELECTED_COLOR;
+                IntensityHandle.color = SELECTED_COLOR;
 
                 for (int i = 0; i < axisValues.Length; i++)
                 {

@@ -31,6 +31,10 @@ public class UserInputReaderPleasantness : MonoBehaviour
     protected Image PleasantnessFill;
     [SerializeField]
     protected Image IntensityFill;
+    [SerializeField]
+    protected Image PleasantnessHandle;
+    [SerializeField]
+    protected Image IntensityHandle;
     
     [SerializeField]
     protected float SliderCoeff;
@@ -79,6 +83,7 @@ public class UserInputReaderPleasantness : MonoBehaviour
             using (StreamWriter outputFile = new(OutputCsvPath, true))
             {
                 outputFile.WriteLine(line);
+                outputFile.Flush();
             }
         }
 
@@ -103,7 +108,12 @@ public class UserInputReaderPleasantness : MonoBehaviour
             {
                 File.Create(OutputCsvPath);
             }
-                writeToFile = true;
+            writeToFile = true;
+            using (StreamWriter outputFile = new(OutputCsvPath, true))
+            {
+                outputFile.WriteLine("stimulus,tactileSpeed,visualSpeed,pleasantness,instensity");
+                outputFile.Flush();
+            }
         }
         catch
         {

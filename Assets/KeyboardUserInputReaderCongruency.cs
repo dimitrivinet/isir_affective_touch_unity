@@ -11,14 +11,14 @@ public class KeyboardUserInputReaderCongruency : UserInputReaderCongruency
         string joystickMovementUpDown = "none";
         string joystickMovementLeftRight = "none";
 
-        if (Input.GetKeyDown(KeyCode.LeftArrow))
+        if (Input.GetKeyDown(KeyCode.LeftArrow) ||Input.GetKeyDown(KeyCode.Keypad1))
             joystickMovementLeftRight = "left";
-        else if (Input.GetKeyDown(KeyCode.RightArrow))
+        else if (Input.GetKeyDown(KeyCode.RightArrow) || Input.GetKeyDown(KeyCode.Keypad3))
             joystickMovementLeftRight = "right";
 
-        if (Input.GetKeyDown(KeyCode.UpArrow))
+        if (Input.GetKeyDown(KeyCode.UpArrow) ||Input.GetKeyDown(KeyCode.Keypad5))
             joystickMovementUpDown = "up";
-        else if (Input.GetKeyDown(KeyCode.DownArrow))
+        else if (Input.GetKeyDown(KeyCode.DownArrow) || Input.GetKeyDown(KeyCode.Keypad2))
             joystickMovementUpDown = "down";
 
         if (Input.GetKeyDown(KeyCode.Return) || Input.GetKeyDown(KeyCode.KeypadEnter))

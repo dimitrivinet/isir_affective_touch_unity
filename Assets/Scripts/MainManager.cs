@@ -43,6 +43,7 @@ public class MainManager : MonoBehaviour
 
     public void ParseTrials()
     {
+        trials.Clear();
         foreach (string trial_str in trials_str)
         {
             try

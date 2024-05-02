@@ -37,6 +37,11 @@ public class Experiment : MonoBehaviour
         UserGaveInput = "true";
     }
 
+    public void RedoStimulus()
+    {
+        UserGaveInput = "redo";
+    }
+
     public void SpawnStartExperiment()
     {
         RoutineEnumerator = StartExperiment();
@@ -100,7 +105,7 @@ public class Experiment : MonoBehaviour
 
             var trial = Trials[CurrTrial];
 
-            Debug.Log($"trial n.{CurrTrial}: {trial}");
+            Debug.Log($"trial n.{CurrTrial}: tactile={trial.TactileSpeed}, visual={trial.VisualSpeed}");
             Redis.Set(RedisChannels.current_trial, $"{CurrTrial + 1}");
 
             if (trial.Stimulus != last_trial_type)
@@ -135,7 +140,7 @@ public class Experiment : MonoBehaviour
             yield return StimulusManager.StimulateOnce(trial.TactileSpeed, trial.VisualSpeed, strokeType, 0.0f);
 
             // wait for stimulus done to be true
-            Debug.Log("waiting for stimulus to be done");
+            // Debug.Log("waiting for stimulus to be done");
             bool cont = Redis.Get(RedisChannels.stimulus_done) == "true";
             cont = true;  // skip waiting for answer
             while (!cont)

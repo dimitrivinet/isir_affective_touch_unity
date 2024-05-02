@@ -2433,6 +2433,8 @@ MonoBehaviour:
   IntensityText: {fileID: 1832402322}
   PleasantnessFill: {fileID: 1608353431}
   IntensityFill: {fileID: 361480326}
+  PleasantnessHandle: {fileID: 367283053}
+  IntensityHandle: {fileID: 1844800075}
   SliderCoeff: 15
   SubmitText: {fileID: 1232061026}
   SwitchControllerPassthrough: {fileID: 871297273}
@@ -2459,6 +2461,8 @@ MonoBehaviour:
   IntensityText: {fileID: 1832402322}
   PleasantnessFill: {fileID: 1608353431}
   IntensityFill: {fileID: 361480326}
+  PleasantnessHandle: {fileID: 367283053}
+  IntensityHandle: {fileID: 1844800075}
   SliderCoeff: 10
   SubmitText: {fileID: 1232061026}
   SwitchControllerPassthrough: {fileID: 0}
@@ -16232,9 +16236,9 @@ MonoBehaviour:
   m_OnClick:
     m_PersistentCalls:
       m_Calls:
-      - m_Target: {fileID: 1667922145}
-        m_TargetAssemblyTypeName: ButtonActions, Assembly-CSharp
-        m_MethodName: RunExperiment
+      - m_Target: {fileID: 1189967703}
+        m_TargetAssemblyTypeName: Experiment, Assembly-CSharp
+        m_MethodName: RedoStimulus
         m_Mode: 1
         m_Arguments:
           m_ObjectArgument: {fileID: 0}
@@ -19146,7 +19150,7 @@ MonoBehaviour:
   m_MinValue: 0
   m_MaxValue: 1000
   m_WholeNumbers: 0
-  m_Value: 1000
+  m_Value: 720
   m_OnValueChanged:
     m_PersistentCalls:
       m_Calls: []
@@ -19816,7 +19820,7 @@ MonoBehaviour:
   m_MinValue: 0
   m_MaxValue: 1000
   m_WholeNumbers: 0
-  m_Value: 0
+  m_Value: 191
   m_OnValueChanged:
     m_PersistentCalls:
       m_Calls: []
