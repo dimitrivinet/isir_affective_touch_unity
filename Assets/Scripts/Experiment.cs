@@ -72,15 +72,15 @@ public class Experiment : MonoBehaviour
             yield break;
         }
 
-        Debug.Log("Check if trials are ok");
-        foreach (var trial in Trials)
-        {
-            if (!ValidSpeeds.Contains(trial.TactileSpeed))
-            {
-                Debug.LogError($"Invalid speed {trial.TactileSpeed}");
-                yield break;
-            }
-        }
+        // Debug.Log("Check if trials are ok");
+        // foreach (var trial in Trials)
+        // {
+        //     if (!ValidSpeeds.Contains(trial.TactileSpeed))
+        //     {
+        //         Debug.LogError($"Invalid speed {trial.TactileSpeed}");
+        //         yield break;
+        //     }
+        // }
 
         Debug.Log("Connect STM");
         VibratorsManager.ConnectSTM();

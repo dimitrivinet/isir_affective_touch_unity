@@ -36,7 +36,6 @@ public class KeyboardUserInputReaderCongruency : UserInputReaderCongruency
         IncongruencyText.color = Color.black;
         CongruencyText.color = Color.black;
         SubmitText.color = Color.black;
-        Debug.Log(currSelectedItem + " " + currSelectedToggle + " " + okButtonPressed);
         switch (currSelectedItem)
         {
             case 0:
