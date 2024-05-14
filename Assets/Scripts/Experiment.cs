@@ -32,6 +32,16 @@ public class Experiment : MonoBehaviour
     private IEnumerator RoutineEnumerator;
     private Coroutine Routine;
 
+    IEnumerator Start()
+    {
+        yield return new WaitForSeconds(1.0f);    
+        Debug.Log("Get trials list");
+        if (MainManager.Instance != null)
+        {
+            Trials = MainManager.Instance.trials;
+        }
+    }
+
     public void SetUserInputDone()
     {
         UserGaveInput = "true";
@@ -59,12 +69,6 @@ public class Experiment : MonoBehaviour
         if (Status == ExperimentStatus.Running)
         {
             yield break;
-        }
-
-        Debug.Log("Get trials list");
-        if (MainManager.Instance != null)
-        {
-            Trials = MainManager.Instance.trials;
         }
 
         if (!Trials.Any())
@@ -142,7 +146,7 @@ public class Experiment : MonoBehaviour
             // wait for stimulus done to be true
             // Debug.Log("waiting for stimulus to be done");
             bool cont = Redis.Get(RedisChannels.stimulus_done) == "true";
-            cont = true;  // skip waiting for answer
+            cont = true;  // skip waiting for stimulus done
             while (!cont)
             {
                 if (Stop)

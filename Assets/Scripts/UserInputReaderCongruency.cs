@@ -38,10 +38,11 @@ public class UserInputReaderCongruency : MonoBehaviour
 
     [SerializeField]
     protected string OutputCsvPath;
+    [SerializeField]
+    protected bool writeToFile;
 
     protected int currSelectedItem;
     protected int currSelectedToggle;
-    protected bool writeToFile;
 
     protected void Reset()
     {   
@@ -81,35 +82,49 @@ public class UserInputReaderCongruency : MonoBehaviour
         
         Reset();
     }
-
+    
     protected void Awake()
     {
         Reset();
+    }
 
+    protected void Start()
+    {
         if (MainManager.Instance != null)
         {
             if (MainManager.Instance.OutputCsvPath != null)
             {
                 OutputCsvPath = MainManager.Instance.OutputCsvPath;
+                writeToFile = true;
             }    
+            else
+            {
+                Debug.LogError("MainManager doesn't have OutputCsvPath");
+                writeToFile = false;
+            }
         }
+        else
+        {
+            Debug.LogWarning("Running without MainManager");
+            writeToFile = false;
+        }
+
+        if (!writeToFile)
+        {
+            Debug.LogWarning("Not writing participant answers to file.");
+            return;
+        }
+
         try
         {
-            if (!File.Exists(OutputCsvPath))
-            {
-                File.Create(OutputCsvPath);
-            }
-            writeToFile = true;
-            
-            using (StreamWriter outputFile = new(OutputCsvPath, true))
-            {
-                outputFile.WriteLine("stimulus,tactileSpeed,visualSpeed,congruencyReal,congruencyParticipant");
-                outputFile.Flush();
-            }
+            FileManager.NewFile(OutputCsvPath);
+            FileManager.WriteLine(OutputCsvPath, "stimulus,tactileSpeed,visualSpeed,congruencyReal,congruencyParticipant", true);
         }
-        catch
+        catch (Exception ex)
         {
+            Debug.LogWarning($"Error creating or writing to file: '{OutputCsvPath}'");
             writeToFile = false;
+            throw ex;
         }
     }
 

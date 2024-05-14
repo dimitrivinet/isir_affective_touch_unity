@@ -1,6 +1,7 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Security.Cryptography;
 using Meta.WitAi;
 using Unity.VisualScripting;
 using UnityEngine;
@@ -68,10 +69,12 @@ public class RouteFollow : MonoBehaviour
 
 
     private bool coroutineAllowed;
+    private System.Random rng;
 
     // Start is called before the first frame update
     void Start()
     {
+        rng = new();
         routeToGo = 0;
         tParam = 0f;
         coroutineAllowed = true;
@@ -138,7 +141,35 @@ public class RouteFollow : MonoBehaviour
         StrokeSpeed = speed_cms;
 
         Vector3 p0 = routes[0].GetChild(0).position;
-        AdjustedPosOffset = PosOffset - (stroke_length_cm - 9f) * TrajPosCoeff * transform.forward / 100;
+ 
+        // *
+        // * random positioning for stroke lengths < 9cm
+        // *
+        // METHOD 1
+        // float trajPosCoeff;
+        // if (stroke_length_cm < 9f)
+        // {
+        //     // trajPosCoeff = TrajPosCoeff - rng.Next((int)(TrajPosCoeff * 2 * 100)) / (TrajPosCoeff * 100);
+        //     trajPosCoeff = rng.Next((int)(TrajPosCoeff * 100)) / (TrajPosCoeff * 100);
+        // }
+        // else
+        // {
+        //     trajPosCoeff = TrajPosCoeff;
+        // }
+        // AdjustedPosOffset = PosOffset - (stroke_length_cm - 9f) * trajPosCoeff * transform.forward / 100;
+        // METHOD 2
+        float trajPosOffset = 0f;
+        if (speed_cms != speedCmsTactile)
+        {
+            // curve fitted equation
+            float freedom = 2.25f + 1.833f * stroke_length_cm - 0.074f * (float)Math.Pow((double)stroke_length_cm, 2);
+            float maxTrajPosOffset = freedom - stroke_length_cm;
+            maxTrajPosOffset = Math.Max(maxTrajPosOffset, 0.0f);
+            trajPosOffset = rng.Next((int)(maxTrajPosOffset * 100)) / 100.0f;
+        }
+        Vector3 zeroPosOffset = PosOffset - (stroke_length_cm - 9f) * transform.forward / 100;
+        AdjustedPosOffset = zeroPosOffset - trajPosOffset * transform.forward / 100;
+        
         transform.position = p0 + AdjustedPosOffset;
         transform.gameObject.SetActive(true);
 

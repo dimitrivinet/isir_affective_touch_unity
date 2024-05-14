@@ -7,17 +7,20 @@ public class ObjectPinning : MonoBehaviour
     public GameObject Target;
     public GameObject Anchor;
     public Vector3 offsetValue;
+    public bool lateUpdate = false;
     public bool freeze = false;
-    // Start is called before the first frame update
-    void Start()
-    {
-        
-    }
-
+ 
     // Update is called once per frame
     void Update()
     {
-        if (!freeze)
+        if (!freeze && !lateUpdate)
+            Target.transform.position = Anchor.transform.position + offsetValue;
+    }
+
+    
+    void LateUpdate()
+    {
+        if (!freeze && lateUpdate)
             Target.transform.position = Anchor.transform.position + offsetValue;
     }
 }
