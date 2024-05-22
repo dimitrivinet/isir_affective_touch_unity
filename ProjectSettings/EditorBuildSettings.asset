@@ -9,8 +9,11 @@ EditorBuildSettings:
     path: Assets/Scenes/Menu.unity
     guid: 316c58848ff1948469dabb33e52b9cd4
   - enabled: 1
-    path: Assets/Scenes/Experiment.unity
+    path: Assets/Scenes/Experiment.L.unity
     guid: b7fbdd6988856c5438ad79450596d676
+  - enabled: 1
+    path: Assets/Scenes/Experiment.R.unity
+    guid: 2bbf85a42843d554da4b7c6b7fd3c172
   m_configObjects:
     Unity.XR.Oculus.Settings: {fileID: 11400000, guid: bc6f9bcd26dda304db3d9e299a897dc1, type: 2}
     com.unity.xr.management.loader_settings: {fileID: 11400000, guid: a0e384bc45b131042bcf66802a59bf7a, type: 2}

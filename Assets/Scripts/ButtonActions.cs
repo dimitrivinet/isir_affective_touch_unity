@@ -45,17 +45,29 @@ public class ButtonActions : MonoBehaviour
         ExperimentManager.SpawnStartExperiment();
     }
 
-    public void GoToExperiment()
+    public void GoToExperimentLeft()
     {
-        SceneManager.LoadScene("Experiment");
+        SceneManager.LoadScene("Experiment.L");
     }
 
+    public void GoToExperimentRight()
+    {
+        SceneManager.LoadScene("Experiment.R");
+    }
 
-    public void GoToExperimentChecked()
+    public void GoToExperimentCheckedLeft()
     {
         if (RedisConnString.color == Color.green && MainManager.Instance.RedisConnString != null)
         {
-            SceneManager.LoadScene("Experiment");
+            SceneManager.LoadScene("Experiment.L");
+        }
+    }
+
+    public void GoToExperimentCheckedRight()
+    {
+        if (RedisConnString.color == Color.green && MainManager.Instance.RedisConnString != null)
+        {
+            SceneManager.LoadScene("Experiment.R");
         }
     }
 
