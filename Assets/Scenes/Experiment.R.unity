@@ -2609,7 +2609,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: f22aa2449c21e454389aaf75608a993f, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  UdpHost: 127.0.0.1
+  UdpHost: 10.42.0.1
   UdpPort: 30000
   VibIds: 00000000010000000200000003000000
 --- !u!114 &173361640 stripped
@@ -10411,16 +10411,16 @@ MonoBehaviour:
   - {fileID: 38968694}
   - {fileID: 1603721282}
   VibratorDelays:
-  - -2
-  - -2
-  - -2
-  - -2
-  - -2
-  - -1.9
-  - -1.9
-  - -1.9
-  - -1.9
-  - -1.9
+  - -2.25
+  - -2.25
+  - -2.25
+  - -2.25
+  - -2.25
+  - -2.05
+  - -2.05
+  - -2.05
+  - -2.05
+  - -2.05
   Redis: {fileID: 1863802832}
   VibratorsManager: {fileID: 170477959}
   VisualManager: {fileID: 94461521}
