@@ -1,6 +1,7 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading;
 using TMPro;
 using UnityEngine;
@@ -138,6 +139,7 @@ public class ManualStimulus : MonoBehaviour
             yield break;
         }
         Debug.Log("delai total: " + delay);
+        Debug.Log("stim: " + strokeType);
 
         if (delay < 0)  // TactileStroke should run before VisualStroke
         {

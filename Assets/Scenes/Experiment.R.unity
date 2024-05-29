@@ -17444,11 +17444,6 @@ Transform:
   m_CorrespondingSourceObject: {fileID: 8018118334481897805, guid: e90520f3b2e75c34b84d96e20091eb25, type: 3}
   m_PrefabInstance: {fileID: 256240790}
   m_PrefabAsset: {fileID: 0}
---- !u!4 &1335652244 stripped
-Transform:
-  m_CorrespondingSourceObject: {fileID: 6731350706900551798, guid: e90520f3b2e75c34b84d96e20091eb25, type: 3}
-  m_PrefabInstance: {fileID: 1975522456}
-  m_PrefabAsset: {fileID: 0}
 --- !u!1 &1335949807 stripped
 GameObject:
   m_CorrespondingSourceObject: {fileID: 8914649145424431402, guid: e90520f3b2e75c34b84d96e20091eb25, type: 3}
@@ -17772,6 +17767,11 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   geometryType: 3
+--- !u!4 &1391582810 stripped
+Transform:
+  m_CorrespondingSourceObject: {fileID: 546851531732986547, guid: e90520f3b2e75c34b84d96e20091eb25, type: 3}
+  m_PrefabInstance: {fileID: 1975522456}
+  m_PrefabAsset: {fileID: 0}
 --- !u!1 &1393648446 stripped
 GameObject:
   m_CorrespondingSourceObject: {fileID: 919132149155446097, guid: e90520f3b2e75c34b84d96e20091eb25, type: 3}
@@ -22285,8 +22285,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: c69cbbddcaf2158418c9db7949228059, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  staticAvatarWrist: {fileID: 1335652244}
-  skeleton: {fileID: 1677570724}
+  staticAvatarWrist: {fileID: 1391582810}
+  skeleton: {fileID: 173361640}
   target: {fileID: 687060943}
   offset: {x: 0, y: 0, z: 0}
 --- !u!114 &1826399832
